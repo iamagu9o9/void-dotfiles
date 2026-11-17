@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+ok()  { printf '  \033[32mok\033[0m       %s\n' "$1"; }
+bad() { printf '  \033[31mMISSING\033[0m  %s\n            -> %s\n' "$1" "$2"; }
+
+# repair: GTK colour template and links
+mkdir -p ~/.config/wal/templates ~/.config/gtk-3.0 ~/.config/gtk-4.0
+if [ ! -f ~/.config/wal/templates/gtk-colors.css ]; then
+cat > ~/.config/wal/templates/gtk-colors.css <<'EOT'
+@define-color accent_color {color4};
+@define-color accent_bg_color {color4};
+@define-color accent_fg_color {background};
+@define-color window_bg_color {background};
+@define-color window_fg_color {foreground};
+@define-color view_bg_color {background};
+@define-color view_fg_color {foreground};
+@define-color headerbar_bg_color {background};
+@define-color headerbar_fg_color {foreground};
+@define-color sidebar_bg_color {color0};
+@define-color card_bg_color {color0};
+@define-color popover_bg_color {background};
+@define-color popover_fg_color {foreground};
+EOT
+fi
+for v in 3.0 4.0; do
+  if [ -e ~/.config/gtk-$v/gtk.css ] && [ ! -L ~/.config/gtk-$v/gtk.css ]; then mv ~/.config/gtk-$v/gtk.css ~/.config/gtk-$v/gtk.css.bak; fi
+  ln -sfn ~/.cache/wal/gtk-colors.css ~/.config/gtk-$v/gtk.css
+done
+
+echo "== applying the theme =="
+setwall 2>&1 | grep "setwall\]"
+echo
+echo "== apps =="
+[ -s ~/.local/state/qstheme/Pal.qml ] && ok "Quickshell (bar, menus, dock, popups)" || bad "Quickshell" "run setwall and read its errors"
+grep -q color4 ~/.cache/wal/colors.json 2>/dev/null && ok "Terminals, btop, fastfetch, lock screen" || bad "Terminals / btop" "wal did not run; the setwall output above says why"
+[ -s ~/.cache/wal/gtk-colors.css ] && ok "GTK and libadwaita apps (reopen them to see it)" || bad "GTK apps" "wal did not render the GTK template"
+if command -v plasma-apply-colorscheme >/dev/null && [ -f ~/.local/share/color-schemes/WallpaperA.colors ]; then ok "Qt / KDE apps (Dolphin, Kate...)"; else bad "Qt / KDE apps" "needs plasma-apply-colorscheme and the WALJSON block in genpal.py"; fi
+d=$(ls ~/.var/app/*/config/*/themes/wallpaper.theme.css ~/.config/*/themes/wallpaper.theme.css 2>/dev/null | head -1)
+[ -n "$d" ] && ok "Discord theme file (switch it on in Vencord > Themes once)" || bad "Discord" "the Vencord block is not in genpal.py"
+command -v pywalfox >/dev/null && ok "Firefox via Pywalfox (extension must be connected)" || bad "Firefox" "pipx install pywalfox && pywalfox install, then add the Pywalfox extension"
+if command -v code >/dev/null; then
+  code --list-extensions 2>/dev/null | grep -qi "wal-theme" && ok "VS Code" || bad "VS Code" "code --install-extension dlasagno.wal-theme, then pick the 'Wal' colour theme"
+else
+  echo "  --       VS Code not found (skipped)"
+fi
+echo "  --       Spotify: not supported yet (its theming needs a separate tool)"

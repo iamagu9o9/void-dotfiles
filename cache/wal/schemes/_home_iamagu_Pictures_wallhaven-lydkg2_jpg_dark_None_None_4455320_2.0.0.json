@@ -1,0 +1,28 @@
+{
+    "checksum": "2c1403c516efd59ae767cf35e2a2b51b",
+    "wallpaper": "/home/iamagu/Pictures/wallhaven-lydkg2.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0d1a1e",
+        "foreground": "#c2c5c6",
+        "cursor": "#c2c5c6"
+    },
+    "colors": {
+        "color0": "#0d1a1e",
+        "color1": "#495253",
+        "color2": "#636D6D",
+        "color3": "#A36256",
+        "color4": "#788786",
+        "color5": "#78BAC9",
+        "color6": "#98A29F",
+        "color7": "#c2c5c6",
+        "color8": "#5c6d70",
+        "color9": "#495253",
+        "color10": "#636D6D",
+        "color11": "#A36256",
+        "color12": "#788786",
+        "color13": "#78BAC9",
+        "color14": "#98A29F",
+        "color15": "#c2c5c6"
+    }
+}

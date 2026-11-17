@@ -1,0 +1,164 @@
+
+#!/usr/bin/env bash
+export PATH="$HOME/.local/bin:$PATH"
+set -u
+
+CACHE="$HOME/.cache"
+QSDIR="$HOME/.config/quickshell"
+MODEFILE="$CACHE/theme-mode"
+WALLFILE="$CACHE/current-wall"
+
+mkdir -p "$CACHE" "$QSDIR"
+
+MODE=$(cat "$MODEFILE" 2>/dev/null || echo wallpaper)
+IMG=""
+
+while (($#)); do
+    case "$1" in
+        --mode)
+            if (($# < 2)); then
+                echo "Usage: setwall --mode light|dark|wallpaper"
+                exit 1
+            fi
+            MODE="$2"
+            shift 2
+            ;;
+        --random)
+            IMG=$(find "$HOME/Pictures" -type f \
+                \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) \
+                2>/dev/null | shuf -n 1)
+            shift
+            ;;
+        light|dark|wallpaper)
+            MODE="$1"
+            shift
+            ;;
+        *)
+            IMG="$1"
+            shift
+            ;;
+    esac
+done
+
+case "$MODE" in
+    light|dark|wallpaper) ;;
+    *) echo "[setwall] Invalid mode: $MODE"; exit 1 ;;
+esac
+
+[[ -n "$IMG" ]] || IMG=$(cat "$WALLFILE" 2>/dev/null || true)
+
+if [[ ! -f "$IMG" ]]; then
+    echo "[setwall] No wallpaper found. Usage: setwall /path/to/image"
+    exit 1
+fi
+
+IMG=$(realpath "$IMG")
+printf '%s\n' "$MODE" > "$MODEFILE"
+printf '%s\n' "$IMG" > "$WALLFILE"
+
+# Only wallpaper mode generates a colorful palette.
+if [[ "$MODE" == wallpaper ]]; then
+    command -v wal >/dev/null 2>&1 || {
+        echo "[setwall] pywal (wal) is required for wallpaper mode."
+        exit 1
+    }
+    wal -i "$IMG" -n -q || {
+        echo "[setwall] pywal failed."
+        exit 1
+    }
+fi
+
+# Generate the active Quickshell palette.
+python3 - "$MODE" <<'PY'
+import json
+import os
+import sys
+
+mode = sys.argv[1]
+home = os.path.expanduser("~")
+
+if mode == "light":
+    light = True
+    bg, fg, dim = "#ffffff", "#000000", "#333333"
+    accent = accent2 = c1 = c2 = c3 = c5 = "#000000"
+
+elif mode == "dark":
+    light = False
+    bg, fg, dim = "#000000", "#ffffff", "#cccccc"
+    accent = accent2 = c1 = c2 = c3 = c5 = "#ffffff"
+
+else:
+    light = False
+    bg, fg, dim = "#111111", "#ffffff", "#cccccc"
+    try:
+        with open(os.path.join(home, ".cache/wal/colors.json")) as f:
+            colors = json.load(f)["colors"]
+    except Exception as e:
+        print(f"[setwall] Could not load wallpaper colors: {e}")
+        sys.exit(1)
+
+    accent = colors.get("color4", "#729fcf")
+    accent2 = colors.get("color5", "#ad7fa8")
+    c1 = colors.get("color1", accent)
+    c2 = colors.get("color2", accent2)
+    c3 = colors.get("color3", accent)
+    c5 = colors.get("color5", accent2)
+
+qml = f'''pragma Singleton
+import Quickshell
+import QtQuick
+
+Singleton {{
+    readonly property bool light: {str(light).lower()}
+    readonly property color bg: "{bg}"
+    readonly property color fg: "{fg}"
+    readonly property color dim: "{dim}"
+    readonly property color accent: "{accent}"
+    readonly property color accent2: "{accent2}"
+    readonly property color c1: "{c1}"
+    readonly property color c2: "{c2}"
+    readonly property color c3: "{c3}"
+    readonly property color c5: "{c5}"
+    function a(c, o) {{ return Qt.rgba(c.r, c.g, c.b, o) }}
+}}
+'''
+
+for target in (
+    os.path.join(home, ".config/quickshell/Pal.qml"),
+    os.path.join(home, ".cache/wal/Pal.qml"),
+):
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    with open(target, "w") as f:
+        f.write(qml)
+
+print(f"[setwall] {mode}: background={bg}, foreground={fg}")
+PY
+
+if [[ "$?" -ne 0 ]]; then
+    echo "[setwall] Palette generation failed."
+    exit 1
+fi
+
+# Apply the wallpaper using Hyprpaper, if installed.
+if command -v hyprpaper >/dev/null 2>&1; then
+    mkdir -p "$HOME/.config/hypr"
+    cat > "$HOME/.config/hypr/hyprpaper.conf" <<CONF
+splash = false
+wallpaper {
+    monitor =
+    path = $IMG
+    fit_mode = cover
+}
+CONF
+    pkill hyprpaper 2>/dev/null || true
+    hyprpaper >/dev/null 2>&1 &
+fi
+
+# Restart Quickshell.
+pkill -x quickshell 2>/dev/null || true
+sleep 1
+quickshell -c "$QSDIR" >/dev/null 2>&1 &
+hyprctl reload >/dev/null 2>&1 || true
+
+echo "[setwall] Done: $MODE"
+

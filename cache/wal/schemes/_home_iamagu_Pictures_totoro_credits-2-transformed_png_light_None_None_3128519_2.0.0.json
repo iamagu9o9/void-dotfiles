@@ -1,0 +1,28 @@
+{
+    "checksum": "f771784fc7369ba0d642a1da82b685c3",
+    "wallpaper": "/home/iamagu/Pictures/totoro_credits-2-transformed.png",
+    "alpha": "100",
+    "special": {
+        "background": "#f2f2f2",
+        "foreground": "#3c3c3c",
+        "cursor": "#3c3c3c"
+    },
+    "colors": {
+        "color0": "#f2f2f2",
+        "color1": "#926D36",
+        "color2": "#9D7A48",
+        "color3": "#B68D4C",
+        "color4": "#A7906F",
+        "color5": "#C19C60",
+        "color6": "#A79E97",
+        "color7": "#3c3c3c",
+        "color8": "#b5b5b5",
+        "color9": "#926D36",
+        "color10": "#9D7A48",
+        "color11": "#B68D4C",
+        "color12": "#A7906F",
+        "color13": "#C19C60",
+        "color14": "#A79E97",
+        "color15": "#3c3c3c"
+    }
+}

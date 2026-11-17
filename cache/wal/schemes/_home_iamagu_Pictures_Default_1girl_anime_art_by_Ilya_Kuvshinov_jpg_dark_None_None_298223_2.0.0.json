@@ -1,0 +1,28 @@
+{
+    "checksum": "8723fe6db1c6b4252ec54544e663b84b",
+    "wallpaper": "/home/iamagu/Pictures/Default_1girl_anime_art_by_Ilya_Kuvshinov.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0f1525",
+        "foreground": "#c3c4c8",
+        "cursor": "#c3c4c8"
+    },
+    "colors": {
+        "color0": "#0f1525",
+        "color1": "#3E758B",
+        "color2": "#D0698A",
+        "color3": "#408A9C",
+        "color4": "#A69EA4",
+        "color5": "#EEA39F",
+        "color6": "#FDE6B3",
+        "color7": "#c3c4c8",
+        "color8": "#5f6374",
+        "color9": "#3E758B",
+        "color10": "#D0698A",
+        "color11": "#408A9C",
+        "color12": "#A69EA4",
+        "color13": "#EEA39F",
+        "color14": "#FDE6B3",
+        "color15": "#c3c4c8"
+    }
+}

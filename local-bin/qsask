@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# qsask: reads a prompt on stdin, prints the answer.
+# Backend is chosen in ~/.config/qstheme/ai : "claude" or "ollama:<model>"
+cfg=$(cat ~/.config/qstheme/ai 2>/dev/null || echo claude)
+case "$cfg" in
+  ollama:*) exec ollama run "${cfg#ollama:}" ;;
+  *)        exec claude -p ;;
+esac

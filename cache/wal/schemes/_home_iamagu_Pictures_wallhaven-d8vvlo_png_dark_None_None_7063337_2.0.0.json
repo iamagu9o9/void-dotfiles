@@ -1,0 +1,28 @@
+{
+    "checksum": "b478951962327ec0b1b2c33477e919fa",
+    "wallpaper": "/home/iamagu/Pictures/wallhaven-d8vvlo.png",
+    "alpha": "100",
+    "special": {
+        "background": "#201a0d",
+        "foreground": "#c7c5c2",
+        "cursor": "#c7c5c2"
+    },
+    "colors": {
+        "color0": "#201a0d",
+        "color1": "#8A8C7C",
+        "color2": "#C48F7B",
+        "color3": "#929888",
+        "color4": "#A29E8E",
+        "color5": "#9AA596",
+        "color6": "#A5A898",
+        "color7": "#c7c5c2",
+        "color8": "#716b5d",
+        "color9": "#8A8C7C",
+        "color10": "#C48F7B",
+        "color11": "#929888",
+        "color12": "#A29E8E",
+        "color13": "#9AA596",
+        "color14": "#A5A898",
+        "color15": "#c7c5c2"
+    }
+}

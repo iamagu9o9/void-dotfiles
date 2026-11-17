@@ -1,0 +1,24 @@
+singleton Pal Pal.qml
+singleton Config Config.qml
+singleton Sys Sys.qml
+singleton Theme Theme.qml
+SideIcon SideIcon.qml
+Ring Ring.qml
+SideBar SideBar.qml
+Menu Menu.qml
+Notifs Notifs.qml
+Wallpapers Wallpapers.qml
+ClockWidget ClockWidget.qml
+Dock Dock.qml
+DTile DTile.qml
+DSlide DSlide.qml
+Dashboard Dashboard.qml
+Chip Chip.qml
+SetRow SetRow.qml
+SettingsApp SettingsApp.qml
+Seg Seg.qml
+ModeCard ModeCard.qml
+Launcher Launcher.qml
+AiChat AiChat.qml
+singleton LConf LConf.qml
+LauncherSettings LauncherSettings.qml

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+case "$1" in top|bottom|left|right) ;; *) echo "usage: barpos top|bottom|left|right"; exit 1 ;; esac
+sed -i "s/property string barPosition: \".*\"/property string barPosition: \"$1\"/" "$HOME/.config/quickshell/Config.qml"
+echo "bar -> $1"

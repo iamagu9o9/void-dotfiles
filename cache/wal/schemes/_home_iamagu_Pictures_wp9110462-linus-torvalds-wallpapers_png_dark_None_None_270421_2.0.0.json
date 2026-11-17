@@ -1,0 +1,28 @@
+{
+    "checksum": "2089674239272c4e10618977fd5171ec",
+    "wallpaper": "/home/iamagu/Pictures/wp9110462-linus-torvalds-wallpapers.png",
+    "alpha": "100",
+    "special": {
+        "background": "#0b151a",
+        "foreground": "#c2c4c5",
+        "cursor": "#c2c4c5"
+    },
+    "colors": {
+        "color0": "#0b151a",
+        "color1": "#A27B79",
+        "color2": "#8F8181",
+        "color3": "#AC9590",
+        "color4": "#C2A69D",
+        "color5": "#CBB6AB",
+        "color6": "#DBC9BD",
+        "color7": "#c2c4c5",
+        "color8": "#5a676f",
+        "color9": "#A27B79",
+        "color10": "#8F8181",
+        "color11": "#AC9590",
+        "color12": "#C2A69D",
+        "color13": "#CBB6AB",
+        "color14": "#DBC9BD",
+        "color15": "#c2c4c5"
+    }
+}

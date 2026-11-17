@@ -1,0 +1,28 @@
+{
+    "checksum": "131738e606e8f8762de65eaa25cb543e",
+    "wallpaper": "/home/iamagu/Pictures/TuxOutline.png",
+    "alpha": "100",
+    "special": {
+        "background": "#0d0606",
+        "foreground": "#c2c0c0",
+        "cursor": "#c2c0c0"
+    },
+    "colors": {
+        "color0": "#0d0606",
+        "color1": "#444444",
+        "color2": "#585858",
+        "color3": "#6E6E6E",
+        "color4": "#9F9F9F",
+        "color5": "#CFCFCF",
+        "color6": "#E8E8E8",
+        "color7": "#c2c0c0",
+        "color8": "#685555",
+        "color9": "#444444",
+        "color10": "#585858",
+        "color11": "#6E6E6E",
+        "color12": "#9F9F9F",
+        "color13": "#CFCFCF",
+        "color14": "#E8E8E8",
+        "color15": "#c2c0c0"
+    }
+}

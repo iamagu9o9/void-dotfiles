@@ -1,0 +1,12 @@
+import Quickshell
+
+ShellRoot {
+    SideBar {}
+    Menu {}
+    Notifs {}
+    Wallpapers {}
+    ClockWidget {}
+    Dock {}
+    Dashboard {}
+    SettingsApp {}
+}

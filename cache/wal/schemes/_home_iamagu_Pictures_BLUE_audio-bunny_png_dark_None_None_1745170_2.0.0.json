@@ -1,0 +1,28 @@
+{
+    "checksum": "b992cbb5d41741b154c552d99a285dd4",
+    "wallpaper": "/home/iamagu/Pictures/BLUE_audio-bunny.png",
+    "alpha": "100",
+    "special": {
+        "background": "#101a1b",
+        "foreground": "#c3c5c6",
+        "cursor": "#c3c5c6"
+    },
+    "colors": {
+        "color0": "#101a1b",
+        "color1": "#73458E",
+        "color2": "#7E42A1",
+        "color3": "#843DAE",
+        "color4": "#904DAE",
+        "color5": "#AE57CE",
+        "color6": "#D068EA",
+        "color7": "#c3c5c6",
+        "color8": "#5c7070",
+        "color9": "#73458E",
+        "color10": "#7E42A1",
+        "color11": "#843DAE",
+        "color12": "#904DAE",
+        "color13": "#AE57CE",
+        "color14": "#D068EA",
+        "color15": "#c3c5c6"
+    }
+}

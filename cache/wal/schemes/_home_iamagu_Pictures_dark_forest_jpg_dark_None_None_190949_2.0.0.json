@@ -1,0 +1,28 @@
+{
+    "checksum": "a12a765bf42544343f2d8a6efedde743",
+    "wallpaper": "/home/iamagu/Pictures/dark_forest.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0c121b",
+        "foreground": "#c2c3c6",
+        "cursor": "#c2c3c6"
+    },
+    "colors": {
+        "color0": "#0c121b",
+        "color1": "#042F91",
+        "color2": "#033CAE",
+        "color3": "#024E8A",
+        "color4": "#0F5AAE",
+        "color5": "#2D5BD0",
+        "color6": "#3365DF",
+        "color7": "#c2c3c6",
+        "color8": "#5b626f",
+        "color9": "#042F91",
+        "color10": "#033CAE",
+        "color11": "#024E8A",
+        "color12": "#0F5AAE",
+        "color13": "#2D5BD0",
+        "color14": "#3365DF",
+        "color15": "#c2c3c6"
+    }
+}

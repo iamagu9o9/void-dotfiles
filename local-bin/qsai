@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+import json, os, sys, urllib.request, urllib.error
+home = os.path.expanduser("~")
+cfgp = home + "/.config/qsai/config.json"
+histp = home + "/.local/state/qsai/history.json"
+os.makedirs(os.path.dirname(histp), exist_ok=True)
+cfg = {"provider": "auto", "anthropic_model": "claude-sonnet-5-5", "ollama_model": "llama3.2",
+       "ollama_url": "http://localhost:11434", "max_tokens": 1024, "history": 12,
+       "system": "You are a helpful assistant inside a Linux desktop. Keep answers short and in plain text, no markdown."}
+try:
+    cfg.update(json.load(open(cfgp)))
+except Exception:
+    pass
+
+if len(sys.argv) > 1 and sys.argv[1] == "--clear":
+    try:
+        os.remove(histp)
+    except OSError:
+        pass
+    print("cleared")
+    sys.exit(0)
+
+prompt = " ".join(sys.argv[1:]).strip()
+if not prompt:
+    sys.exit(0)
+try:
+    hist = json.load(open(histp))
+except Exception:
+    hist = []
+hist.append({"role": "user", "content": prompt})
+msgs = hist[-cfg["history"]:]
+while msgs and msgs[0]["role"] != "user":
+    msgs = msgs[1:]
+
+def key():
+    k = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not k:
+        try:
+            k = open(home + "/.config/qsai/key").read().strip()
+        except Exception:
+            k = ""
+    return k
+
+def post(url, body, headers):
+    req = urllib.request.Request(url, json.dumps(body).encode(), headers, method="POST")
+    with urllib.request.urlopen(req, timeout=180) as r:
+        return json.load(r)
+
+provider = cfg["provider"]
+if provider == "auto":
+    provider = "anthropic" if key() else "ollama"
+try:
+    if provider == "anthropic":
+        k = key()
+        if not k:
+            print("No API key found. Save it in ~/.config/qsai/key")
+            sys.exit(1)
+        r = post("https://api.anthropic.com/v1/messages",
+                 {"model": cfg["anthropic_model"], "max_tokens": cfg["max_tokens"],
+                  "system": cfg["system"], "messages": msgs},
+                 {"content-type": "application/json", "x-api-key": k, "anthropic-version": "2023-06-01"})
+        text = "".join(b.get("text", "") for b in r.get("content", []))
+    else:
+        r = post(cfg["ollama_url"] + "/api/chat",
+                 {"model": cfg["ollama_model"], "stream": False,
+                  "messages": [{"role": "system", "content": cfg["system"]}] + msgs},
+                 {"content-type": "application/json"})
+        text = r.get("message", {}).get("content", "")
+except urllib.error.HTTPError as e:
+    print("Error %s: %s" % (e.code, e.read().decode()[:300]))
+    sys.exit(1)
+except Exception as e:
+    print("Could not reach the AI (%s): %s" % (provider, e))
+    sys.exit(1)
+
+hist.append({"role": "assistant", "content": text})
+json.dump(hist[-40:], open(histp, "w"))
+print(text.strip())

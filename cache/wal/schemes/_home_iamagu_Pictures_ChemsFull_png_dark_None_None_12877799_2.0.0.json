@@ -1,0 +1,28 @@
+{
+    "checksum": "ca4f5b6d61a0667bd2dfe3a8c3eeb7e0",
+    "wallpaper": "/home/iamagu/Pictures/ChemsFull.png",
+    "alpha": "100",
+    "special": {
+        "background": "#10190b",
+        "foreground": "#c3c5c2",
+        "cursor": "#c3c5c2"
+    },
+    "colors": {
+        "color0": "#10190b",
+        "color1": "#C45B64",
+        "color2": "#9D9A5D",
+        "color3": "#A2806B",
+        "color4": "#C2B65F",
+        "color5": "#B9B2A0",
+        "color6": "#DBA3A4",
+        "color7": "#c3c5c2",
+        "color8": "#616e5a",
+        "color9": "#C45B64",
+        "color10": "#9D9A5D",
+        "color11": "#A2806B",
+        "color12": "#C2B65F",
+        "color13": "#B9B2A0",
+        "color14": "#DBA3A4",
+        "color15": "#c3c5c2"
+    }
+}

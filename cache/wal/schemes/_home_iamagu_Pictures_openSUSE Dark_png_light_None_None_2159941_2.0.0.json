@@ -1,0 +1,28 @@
+{
+    "checksum": "0015b314aff191c377bbfec74c945028",
+    "wallpaper": "/home/iamagu/Pictures/openSUSE Dark.png",
+    "alpha": "100",
+    "special": {
+        "background": "#f3f4f4",
+        "foreground": "#3c3d3d",
+        "cursor": "#3c3d3d"
+    },
+    "colors": {
+        "color0": "#f3f4f4",
+        "color1": "#319F94",
+        "color2": "#32A095",
+        "color3": "#32A398",
+        "color4": "#32A599",
+        "color5": "#35B7A9",
+        "color6": "#222C2F",
+        "color7": "#3c3d3d",
+        "color8": "#b6b7b7",
+        "color9": "#319F94",
+        "color10": "#32A095",
+        "color11": "#32A398",
+        "color12": "#32A599",
+        "color13": "#35B7A9",
+        "color14": "#222C2F",
+        "color15": "#3c3d3d"
+    }
+}

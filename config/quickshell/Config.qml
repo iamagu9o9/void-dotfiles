@@ -1,0 +1,61 @@
+pragma Singleton
+import Quickshell
+import QtQuick
+
+Singleton {
+    // ---- look ----
+    property real islandOpacity: 0.94
+    property int border: 1
+    property int radius: 22
+    property string font: "JetBrainsMono Nerd Font"
+    property int fontSize: 13
+    property bool use24h: false
+
+    // ---- side bar ----
+    property int sideWidth: 52
+    property int sideMargin: 8
+    property int iconSize: 32
+    property int glyphSize: 17
+    property int trayIcon: 24
+    property int workspaces: 10
+    property var wsLabels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+
+    // ---- what the buttons run ----
+    property string launcher: "qs ipc call launcher toggle"
+    property string windowCmd: "qs ipc call menu toggle windows"
+    property string lockCmd: "hyprlock"
+    property string powerCmd: "qs ipc call menu toggle power"
+    property string wifiMenu: "qs ipc call menu toggle wifi"
+    property string btMenu: "qs ipc call menu toggle bluetooth"
+    property string toolsCmd: "qs ipc call menu toggle tools"
+    property string nightCmd: "hyprsunset -t 3800"
+    property string keyboardCmd: "hyprctl switchxkblayout all next"
+    property int wsFont: 15
+    property var dockApps: ["org.mozilla.firefox", "kitty-open", "org.kde.dolphin", "org.videolan.VLC-openbd", "libreoffice-calc"]
+    property bool dockReserve: false
+    property var wallDirs: [Quickshell.env("HOME") + "/Pictures"]
+    property string barPosition: "top"
+    // 0 = plain gray, 0.3 = subtle, 0.5 = default, 0.8 = strong color
+    property real tint: 0.5
+    property string clockStyle: "digital"      // digital or analog
+    property string clockPos: "topright"       // topleft topright bottomleft bottomright center top bottom left right
+    property int clockMarginX: 50
+    property int clockMarginY: 90
+    property int clockSize: 58                 // digital font size, analog = 3x this
+    property bool clock24: false
+    property bool clockSeconds: false
+    property bool clockDate: true
+    property string clockDateFormat: "dddd, d MMMM"
+    property string clockColor: "fg"           // fg accent accent2 dim c1 c2 c3 c5
+    property string clockDateColor: "accent"
+    property bool clockCard: true
+    property real clockOpacity: 0.75
+    property string clockFont: ""              // empty = bar font
+    property bool clockBold: true
+    property string dockPos: "bottom"          // bottom top left right
+    property int dockSize: 44
+    property bool dockAutoHide: true
+    property int dockMargin: 6
+    // tinted, glass, neutral, outline or gradient
+    property string barStyle: "tinted"
+}

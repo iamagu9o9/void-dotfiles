@@ -1,0 +1,28 @@
+{
+    "checksum": "6091b67f258787dac18497d5ef958c5b",
+    "wallpaper": "/home/iamagu/Pictures/DaysGone.png",
+    "alpha": "100",
+    "special": {
+        "background": "#0b1919",
+        "foreground": "#c2c5c5",
+        "cursor": "#c2c5c5"
+    },
+    "colors": {
+        "color0": "#0b1919",
+        "color1": "#526B66",
+        "color2": "#626C62",
+        "color3": "#837F6D",
+        "color4": "#75857A",
+        "color5": "#948C77",
+        "color6": "#A3A08A",
+        "color7": "#c2c5c5",
+        "color8": "#5a6e6e",
+        "color9": "#526B66",
+        "color10": "#626C62",
+        "color11": "#837F6D",
+        "color12": "#75857A",
+        "color13": "#948C77",
+        "color14": "#A3A08A",
+        "color15": "#c2c5c5"
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "checksum": "9dc36bf110ac2240d7fec76c2eb1620e",
+    "wallpaper": "/home/iamagu/Pictures/wahtpflus1471.png",
+    "alpha": "100",
+    "special": {
+        "background": "#111919",
+        "foreground": "#c3c5c5",
+        "cursor": "#c3c5c5"
+    },
+    "colors": {
+        "color0": "#111919",
+        "color1": "#AE352F",
+        "color2": "#C83B2E",
+        "color3": "#E33C2E",
+        "color4": "#954337",
+        "color5": "#B14735",
+        "color6": "#CB4F34",
+        "color7": "#c3c5c5",
+        "color8": "#5c7070",
+        "color9": "#AE352F",
+        "color10": "#C83B2E",
+        "color11": "#E33C2E",
+        "color12": "#954337",
+        "color13": "#B14735",
+        "color14": "#CB4F34",
+        "color15": "#c3c5c5"
+    }
+}

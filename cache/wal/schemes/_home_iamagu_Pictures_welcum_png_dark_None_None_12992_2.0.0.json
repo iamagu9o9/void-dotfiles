@@ -1,0 +1,28 @@
+{
+    "checksum": "7e6ec656a79e07b87ce79e2b2e53d3ae",
+    "wallpaper": "/home/iamagu/Pictures/welcum.png",
+    "alpha": "100",
+    "special": {
+        "background": "#190a0a",
+        "foreground": "#c5c1c1",
+        "cursor": "#c5c1c1"
+    },
+    "colors": {
+        "color0": "#190a0a",
+        "color1": "#676767",
+        "color2": "#787878",
+        "color3": "#878787",
+        "color4": "#989898",
+        "color5": "#A4A4A4",
+        "color6": "#B5B5B5",
+        "color7": "#c5c1c1",
+        "color8": "#6e5959",
+        "color9": "#676767",
+        "color10": "#787878",
+        "color11": "#878787",
+        "color12": "#989898",
+        "color13": "#A4A4A4",
+        "color14": "#B5B5B5",
+        "color15": "#c5c1c1"
+    }
+}

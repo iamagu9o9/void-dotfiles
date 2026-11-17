@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+# dockpin add|remove <app id>   edits ~/.config/qstheme/dock.json
+import json, os, sys
+p = os.path.expanduser("~/.config/qstheme/dock.json")
+try:
+    pins = json.load(open(p))
+except Exception:
+    pins = []
+op, app = sys.argv[1], sys.argv[2]
+if op == "add" and app not in pins:
+    pins.append(app)
+elif op == "remove":
+    pins = [x for x in pins if x.lower() != app.lower()]
+with open(p, "w") as f:
+    json.dump(pins, f, indent=1)

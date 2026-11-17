@@ -1,0 +1,28 @@
+{
+    "checksum": "a509b2062efb1e1197676dc26835aef6",
+    "wallpaper": "/home/iamagu/Pictures/lantern-light-room.png",
+    "alpha": "100",
+    "special": {
+        "background": "#f6f5f4",
+        "foreground": "#3d3d3d",
+        "cursor": "#3d3d3d"
+    },
+    "colors": {
+        "color0": "#f6f5f4",
+        "color1": "#9B745C",
+        "color2": "#A57755",
+        "color3": "#A58561",
+        "color4": "#B18B6E",
+        "color5": "#C89A6F",
+        "color6": "#E8B762",
+        "color7": "#3d3d3d",
+        "color8": "#b8b7b7",
+        "color9": "#9B745C",
+        "color10": "#A57755",
+        "color11": "#A58561",
+        "color12": "#B18B6E",
+        "color13": "#C89A6F",
+        "color14": "#E8B762",
+        "color15": "#3d3d3d"
+    }
+}

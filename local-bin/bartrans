@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+import json, os, re, sys
+try:
+    v = float(sys.argv[1])
+    assert 0.2 <= v <= 1.0
+except Exception:
+    print("usage: bartrans 0.2-1.0   (1.0 = solid, 0.7 = a bit transparent, 0.5 = very)")
+    sys.exit(1)
+sp = os.path.expanduser("~/.local/state/qstheme/settings.json")
+cp = os.path.expanduser("~/.config/quickshell/Config.qml")
+try:
+    d = json.load(open(sp))
+except Exception:
+    d = {}
+d["islandOpacity"] = v
+os.makedirs(os.path.dirname(sp), exist_ok=True)
+json.dump(d, open(sp, "w"))
+c = open(cp).read()
+if "islandOpacity" in c:
+    c = re.sub(r"property real islandOpacity: [0-9.]+", "property real islandOpacity: %s" % v, c)
+else:
+    i = c.rstrip().rfind("}")
+    c = c[:i] + "    property real islandOpacity: %s\n}\n" % v
+open(cp, "w").write(c)
+print("bar opacity:", v)

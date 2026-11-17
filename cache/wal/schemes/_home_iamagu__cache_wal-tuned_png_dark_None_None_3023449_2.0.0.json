@@ -1,0 +1,28 @@
+{
+    "checksum": "99b603cff8f02c98c36079a84d9e188d",
+    "wallpaper": "/home/iamagu/.cache/wal-tuned.png",
+    "alpha": "100",
+    "special": {
+        "background": "#0d0b1b",
+        "foreground": "#c2c2c6",
+        "cursor": "#c2c2c6"
+    },
+    "colors": {
+        "color0": "#0d0b1b",
+        "color1": "#0B0C47",
+        "color2": "#1E1654",
+        "color3": "#451B56",
+        "color4": "#951100",
+        "color5": "#A20A00",
+        "color6": "#922A00",
+        "color7": "#c2c2c6",
+        "color8": "#5c5a6f",
+        "color9": "#0B0C47",
+        "color10": "#1E1654",
+        "color11": "#451B56",
+        "color12": "#951100",
+        "color13": "#A20A00",
+        "color14": "#922A00",
+        "color15": "#c2c2c6"
+    }
+}

@@ -1,0 +1,23 @@
+" Special
+let wallpaper  = "/home/iamagu/Pictures/0258.jpg"
+let background = "#0a0f1c"
+let foreground = "#e2e8f6"
+let cursor     = "#e2e8f6"
+
+" Colors
+let color0  = "#0a0f1c"
+let color1  = "#00bee3"
+let color2  = "#4bb3ff"
+let color3  = "#90a8eb"
+let color4  = "#88a6ff"
+let color5  = "#d08de3"
+let color6  = "#b097ff"
+let color7  = "#e2e8f6"
+let color8  = "#9098ab"
+let color9  = "#3ad5fb"
+let color10 = "#84c8ff"
+let color11 = "#a7bfff"
+let color12 = "#a7bfff"
+let color13 = "#e7a3fb"
+let color14 = "#c4b4ff"
+let color15 = "#e2e8f6"

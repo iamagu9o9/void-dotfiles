@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+# qsset <setting> <value>   changes one property in Quickshell's Config.qml
+import re, sys, os
+key, val = sys.argv[1], sys.argv[2]
+p = os.path.expanduser("~/.config/quickshell/Config.qml")
+lines = open(p).read().split("\n")
+for i, l in enumerate(lines):
+    m = re.match(r"^(\s*property\s+(\w+)\s+%s:\s*)(.*?)(\s*//.*)?$" % re.escape(key), l)
+    if m:
+        v = '"%s"' % val if m.group(2) == "string" else val
+        lines[i] = m.group(1) + v + (m.group(4) or "")
+        open(p, "w").write("\n".join(lines))
+        print("%s = %s" % (key, v))
+        break
+else:
+    print("setting not found:", key)
+    sys.exit(1)

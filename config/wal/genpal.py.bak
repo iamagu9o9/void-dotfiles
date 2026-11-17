@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+import sys, os, re, subprocess, colorsys, math
+
+img, kind, mode = sys.argv[1], sys.argv[2], sys.argv[3]
+home = os.path.expanduser("~")
+light = kind == "light"
+
+def rd(name, default):
+    try:
+        return open(os.path.join(home, ".config", "qstheme", name)).read().strip() or default
+    except Exception:
+        return default
+
+style = rd("style", "analogous")
+STYLES = {
+    "clean":     dict(bg_s=0.14, sat=0.58, step=-1),
+    "tonal":     dict(bg_s=0.16, sat=0.60, step=0),
+    "analogous": dict(bg_s=0.18, sat=0.58, step=28),
+    "vivid":     dict(bg_s=0.30, sat=0.82, step=55),
+    "pastel":    dict(bg_s=0.22, sat=0.45, step=35),
+}
+S = STYLES.get(style, STYLES["analogous"])
+FALLBACK_HUE = 215
+
+def hexc(h, s, l):
+    r, g, b = colorsys.hls_to_rgb((h % 360) / 360.0, max(0, min(1, l)), max(0, min(1, s)))
+    return "#%02x%02x%02x" % (round(r * 255), round(g * 255), round(b * 255))
+
+def lum(c):
+    c = c.lstrip("#")
+    v = [int(c[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    f = lambda x: x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4
+    return 0.2126 * f(v[0]) + 0.7152 * f(v[1]) + 0.0722 * f(v[2])
+
+def contrast(a, b):
+    la, lb = lum(a), lum(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+def dominant_hue(path):
+    try:
+        out = subprocess.run(["magick", path, "-resize", "64x64!", "-depth", "8", "txt:-"],
+                             capture_output=True, text=True, timeout=30).stdout
+    except Exception:
+        return None
+    bins = [0.0] * 36
+    total = 0.0
+    for m in re.finditer(r"\((\d+),(\d+),(\d+)", out):
+        r, g, b = [int(x) / 255 for x in m.groups()]
+        h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        if s < 0.20 or v < 0.20 or v > 0.97:
+            continue
+        w = s * v
+        bins[int(h * 36) % 36] += w
+        total += w
+    if total < 5:
+        return None
+    sm = [bins[i - 1] * 0.5 + bins[i] + bins[(i + 1) % 36] * 0.5 for i in range(36)]
+    peak = max(range(36), key=lambda i: sm[i])
+    x = y = 0.0
+    for d in range(-2, 3):
+        i = (peak + d) % 36
+        ang = math.radians(i * 10 + 5)
+        x += bins[i] * math.cos(ang)
+        y += bins[i] * math.sin(ang)
+    return (math.degrees(math.atan2(y, x)) + 360) % 360
+
+if mode in ("dark", "light"):
+    if light:
+        P = dict(bg="#f4f4f4", fg="#161616", dim="#7a7a7a", accent="#2a2a2a", accent2="#444444",
+                 c1="#4a4a4a", c2="#5a5a5a", c3="#6a6a6a", c5="#505050")
+    else:
+        P = dict(bg="#0b0b0b", fg="#e6e6e6", dim="#7a7a7a", accent="#c4c4c4", accent2="#d0d0d0",
+                 c1="#8f8f8f", c2="#a0a0a0", c3="#b0b0b0", c5="#9a9a9a")
+    note = "monochrome %s" % kind
+else:
+    h = dominant_hue(img)
+    if h is None:
+        h = FALLBACK_HUE
+        note = "no color in wallpaper, hue %d" % h
+    else:
+        note = "hue %d" % h
+    bg_s = S["bg_s"]
+    if 15 <= h % 360 <= 75:
+        bg_s = min(bg_s, 0.14)          # warm hues turn muddy brown when dark
+    bg = hexc(h, bg_s, 0.94 if light else 0.11)
+
+    def acc(hue, dl=0.0, sat=None, ratio=4.5):
+        sat = S["sat"] if sat is None else sat
+        base = 0.34 if light else 0.70
+        l = base - dl if light else base + dl
+        c = hexc(hue, sat, l)
+        for _ in range(45):
+            c = hexc(hue, sat, l)
+            if contrast(c, bg) >= ratio:
+                break
+            l += -0.02 if light else 0.02
+        return c
+
+    st = S["step"]
+    if st == -1:     # clean: every icon the same color
+        P = dict(accent=acc(h), accent2=acc(h), c3=acc(h), c2=acc(h), c1=acc(h),
+                 c5=hexc(h, 0.10, 0.45 if light else 0.60))
+    elif st == 0:      # tonal: one hue, different lightness
+        P = dict(accent=acc(h), accent2=acc(h, 0.08), c3=acc(h, -0.07), c2=acc(h, 0.15), c1=acc(h, -0.13),
+                 c5=acc(h + 180, 0.0, 0.35))
+    else:            # analogous / vivid / pastel: neighbouring hues
+        P = dict(accent=acc(h), accent2=acc(h + st), c3=acc(h - st), c2=acc(h + 2 * st), c1=acc(h - 2 * st),
+                 c5=acc(h + 180, 0.0, S["sat"] * 0.6))
+    fg = hexc(h, 0.12, 0.12 if light else 0.94)
+    dim_l = 0.42 if light else 0.62
+    dim = hexc(h, 0.12, dim_l)
+    for _ in range(30):
+        if contrast(dim, bg) >= 3.2:
+            break
+        dim_l += -0.02 if light else 0.02
+        dim = hexc(h, 0.12, dim_l)
+    P.update(bg=bg, fg=fg, dim=dim)
+
+qml = "pragma Singleton\nimport Quickshell\nimport QtQuick\n\nSingleton {\n"
+qml += "    readonly property bool light: %s\n" % ("true" if light else "false")
+for k in ("bg", "fg", "dim", "accent", "accent2", "c1", "c2", "c3", "c5"):
+    qml += '    readonly property color %s: "%s"\n' % (k, P[k])
+qml += "    function a(c, o) { return Qt.rgba(c.r, c.g, c.b, o) }\n}\n"
+
+out = os.path.join(home, ".local", "state", "qstheme")
+os.makedirs(out, exist_ok=True)
+open(os.path.join(out, "Pal.qml"), "w").write(qml)
+hy = lambda c, a: "rgba(%s%s)" % (c.lstrip("#"), a)
+open(os.path.join(out, "colors-hypr.lua"), "w").write(
+    'return {\n    active = "%s",\n    active2 = "%s",\n    inactive = "%s",\n}\n'
+    % (hy(P["accent"], "ee"), hy(P["accent2"], "ee"), hy(P["dim"], "66")))
+print("[setwall] style=%s | %s | bg %s accent %s" % (style, note, P["bg"], P["accent"]))
+
+# ---------- VENCORD BLOCK: Discord theme from the same palette ----------
+from string import Template
+
+def _shade(c, dl):
+    c = c.lstrip("#")
+    r, g, b = [int(c[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    h, l, s_ = colorsys.rgb_to_hls(r, g, b)
+    r, g, b = colorsys.hls_to_rgb(h, max(0, min(1, l + dl)), s_)
+    return "#%02x%02x%02x" % (round(r * 255), round(g * 255), round(b * 255))
+
+def _rgba(c, a):
+    c = c.lstrip("#")
+    return "rgba(%d, %d, %d, %s)" % (int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16), a)
+
+_up = -1 if light else 1
+_v = dict(
+    b0=_shade(P["bg"], -0.03 * _up), b1=P["bg"], b2=_shade(P["bg"], 0.03 * _up),
+    b3=_shade(P["bg"], 0.07 * _up), b4=_shade(P["bg"], 0.11 * _up),
+    fg=P["fg"], dim=P["dim"], accent=P["accent"],
+    hover=_rgba(P["accent"], 0.12), active=_rgba(P["accent"], 0.22),
+    border=_rgba(P["fg"], 0.12),
+)
+_css = Template(open(os.path.join(home, ".config", "qstheme", "discord.css.tpl")).read()).safe_substitute(_v)
+
+_n = 0
+for _d in ["~/.config/vesktop/themes", "~/.config/Vesktop/themes", "~/.config/Vencord/themes",
+           "~/.var/app/dev.vencord.Vesktop/config/vesktop/themes",
+           "~/.var/app/com.discordapp.Discord/config/Vencord/themes"]:
+    _d = os.path.expanduser(_d)
+    if os.path.isdir(os.path.dirname(_d)):
+        os.makedirs(_d, exist_ok=True)
+        open(os.path.join(_d, "wallpaper.theme.css"), "w").write(_css)
+        _n += 1
+print("[setwall] discord theme written to %d folder(s)" % _n)
+
+# ---------- WALJSON BLOCK: share this palette with wal and KDE ----------
+import json
+
+def _sh2(c, dl):
+    c = c.lstrip("#")
+    r, g, b = [int(c[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    h, l, s_ = colorsys.rgb_to_hls(r, g, b)
+    r, g, b = colorsys.hls_to_rgb(h, max(0, min(1, l + dl)), s_)
+    return "#%02x%02x%02x" % (round(r * 255), round(g * 255), round(b * 255))
+
+def _lift(c):
+    return _sh2(c, -0.08 if light else 0.08)
+
+_W = {
+    "wallpaper": img,
+    "alpha": "100",
+    "special": {"background": P["bg"], "foreground": P["fg"], "cursor": P["fg"]},
+    "colors": {
+        "color0": P["bg"], "color1": P["c1"], "color2": P["c2"], "color3": P["c3"],
+        "color4": P["accent"], "color5": P["c5"], "color6": P["accent2"], "color7": P["fg"],
+        "color8": P["dim"], "color9": _lift(P["c1"]), "color10": _lift(P["c2"]), "color11": _lift(P["c3"]),
+        "color12": _lift(P["accent"]), "color13": _lift(P["c5"]), "color14": _lift(P["accent2"]), "color15": P["fg"],
+    },
+}
+_st = os.path.join(home, ".local", "state", "qstheme")
+os.makedirs(_st, exist_ok=True)
+json.dump(_W, open(os.path.join(_st, "wal-theme.json"), "w"), indent=2)
+
+def _rgbs(c):
+    c = c.lstrip("#")
+    return "%d,%d,%d" % (int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16))
+
+def _kde_sec(name, bg, alt, fgn, fga, fgi, link):
+    return ("[Colors:%s]\nBackgroundNormal=%s\nBackgroundAlternate=%s\nDecorationFocus=%s\nDecorationHover=%s\n"
+            "ForegroundActive=%s\nForegroundInactive=%s\nForegroundLink=%s\nForegroundNegative=218,68,83\n"
+            "ForegroundNeutral=246,116,0\nForegroundNormal=%s\nForegroundPositive=39,174,96\nForegroundVisited=%s\n\n"
+            % (name, _rgbs(bg), _rgbs(alt), _rgbs(P["accent"]), _rgbs(P["accent2"]),
+               _rgbs(fga), _rgbs(fgi), _rgbs(link), _rgbs(fgn), _rgbs(P["accent2"])))
+
+_surf = _sh2(P["bg"], -0.06 if light else 0.06)
+_alt = _sh2(P["bg"], -0.03 if light else 0.03)
+_secs = ""
+for _nm, _bgc in (("Window", P["bg"]), ("View", _surf), ("Button", _surf),
+                  ("Tooltip", _surf), ("Header", P["bg"]), ("Complementary", P["bg"])):
+    _secs += _kde_sec(_nm, _bgc, _alt, P["fg"], P["accent"], P["dim"], P["accent"])
+_secs += _kde_sec("Selection", P["accent"], P["accent"], P["bg"], P["bg"], P["bg"], P["bg"])
+_fx = ("[ColorEffects:Disabled]\nColor=56,56,56\nColorAmount=0\nColorEffect=0\nContrastAmount=0.65\n"
+       "ContrastEffect=1\nIntensityAmount=0.1\nIntensityEffect=2\n\n"
+       "[ColorEffects:Inactive]\nChangeSelectionColor=true\nColor=112,111,110\nColorAmount=0.025\n"
+       "ColorEffect=2\nContrastAmount=0.1\nContrastEffect=2\nEnable=false\nIntensityAmount=0\nIntensityEffect=0\n")
+_kd = os.path.join(home, ".local", "share", "color-schemes")
+os.makedirs(_kd, exist_ok=True)
+for _n in ("A", "B"):
+    open(os.path.join(_kd, "Wallpaper%s.colors" % _n), "w").write(
+        "[General]\nColorScheme=Wallpaper%s\nName=Wallpaper %s\nshadeSortColumn=true\n\n%s%s" % (_n, _n, _secs, _fx))
+print("[setwall] wal theme + KDE color schemes written")

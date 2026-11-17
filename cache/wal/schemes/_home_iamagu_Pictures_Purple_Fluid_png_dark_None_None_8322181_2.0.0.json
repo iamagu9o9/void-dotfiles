@@ -1,0 +1,28 @@
+{
+    "checksum": "9b62a20479af41326313a135d4a92e85",
+    "wallpaper": "/home/iamagu/Pictures/Purple_Fluid.png",
+    "alpha": "100",
+    "special": {
+        "background": "#0a1912",
+        "foreground": "#c1c5c3",
+        "cursor": "#c1c5c3"
+    },
+    "colors": {
+        "color0": "#0a1912",
+        "color1": "#494872",
+        "color2": "#595891",
+        "color3": "#7070B0",
+        "color4": "#7A7BC2",
+        "color5": "#7F80BF",
+        "color6": "#8686B9",
+        "color7": "#c1c5c3",
+        "color8": "#596e64",
+        "color9": "#494872",
+        "color10": "#595891",
+        "color11": "#7070B0",
+        "color12": "#7A7BC2",
+        "color13": "#7F80BF",
+        "color14": "#8686B9",
+        "color15": "#c1c5c3"
+    }
+}

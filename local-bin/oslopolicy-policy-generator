@@ -1,0 +1,6 @@
+#!/usr/bin/python3
+import sys
+from oslo_policy.generator import generate_policy
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(generate_policy())

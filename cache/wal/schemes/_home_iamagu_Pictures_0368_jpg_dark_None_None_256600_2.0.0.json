@@ -1,0 +1,28 @@
+{
+    "checksum": "438c9cdcf15d983d944b3386553d430d",
+    "wallpaper": "/home/iamagu/Pictures/0368.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#110e21",
+        "foreground": "#c3c2c7",
+        "cursor": "#c3c2c7"
+    },
+    "colors": {
+        "color0": "#110e21",
+        "color1": "#340165",
+        "color2": "#5F0A65",
+        "color3": "#4D0370",
+        "color4": "#942365",
+        "color5": "#680195",
+        "color6": "#9D0297",
+        "color7": "#c3c2c7",
+        "color8": "#615d72",
+        "color9": "#340165",
+        "color10": "#5F0A65",
+        "color11": "#4D0370",
+        "color12": "#942365",
+        "color13": "#680195",
+        "color14": "#9D0297",
+        "color15": "#c3c2c7"
+    }
+}

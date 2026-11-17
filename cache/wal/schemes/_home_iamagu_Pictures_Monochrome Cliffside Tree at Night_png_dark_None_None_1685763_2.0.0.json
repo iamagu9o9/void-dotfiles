@@ -1,0 +1,28 @@
+{
+    "checksum": "3fba467111b26d2f581a32f92109480d",
+    "wallpaper": "/home/iamagu/Pictures/Monochrome Cliffside Tree at Night.png",
+    "alpha": "100",
+    "special": {
+        "background": "#170a0a",
+        "foreground": "#c5c1c1",
+        "cursor": "#c5c1c1"
+    },
+    "colors": {
+        "color0": "#170a0a",
+        "color1": "#3F3E40",
+        "color2": "#403F40",
+        "color3": "#4D4C4C",
+        "color4": "#605F5F",
+        "color5": "#60605F",
+        "color6": "#696969",
+        "color7": "#c5c1c1",
+        "color8": "#6d5959",
+        "color9": "#3F3E40",
+        "color10": "#403F40",
+        "color11": "#4D4C4C",
+        "color12": "#605F5F",
+        "color13": "#60605F",
+        "color14": "#696969",
+        "color15": "#c5c1c1"
+    }
+}

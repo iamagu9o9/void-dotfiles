@@ -1,0 +1,28 @@
+{
+    "checksum": "30954e0d876e5e4f43fa071f72107337",
+    "wallpaper": "/home/iamagu/Pictures/BocchiWall.png",
+    "alpha": "100",
+    "special": {
+        "background": "#f4f4f4",
+        "foreground": "#3d3d3d",
+        "cursor": "#3d3d3d"
+    },
+    "colors": {
+        "color0": "#f4f4f4",
+        "color1": "#E9D895",
+        "color2": "#CEC1BD",
+        "color3": "#D5BCC4",
+        "color4": "#F2AFC9",
+        "color5": "#95D2D8",
+        "color6": "#DBCFD1",
+        "color7": "#3d3d3d",
+        "color8": "#b7b7b7",
+        "color9": "#E9D895",
+        "color10": "#CEC1BD",
+        "color11": "#D5BCC4",
+        "color12": "#F2AFC9",
+        "color13": "#95D2D8",
+        "color14": "#DBCFD1",
+        "color15": "#3d3d3d"
+    }
+}

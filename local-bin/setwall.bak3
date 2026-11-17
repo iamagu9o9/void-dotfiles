@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# setwall [image] [wallpaper|dark|light] | --mode M | --cycle | --random
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+cache="$HOME/.cache"; state="$HOME/.local/state/qstheme"; conf="$HOME/.config/qstheme"
+modefile="$cache/theme-mode"; wallfile="$cache/current-wall"
+mkdir -p "$cache" "$state" "$conf/apps" ~/.config/quickshell ~/.config/hypr
+mode=$(cat "$modefile" 2>/dev/null); [ -z "$mode" ] && mode=wallpaper
+img=""; random=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --mode) mode="$2"; shift 2 ;;
+    --cycle) case "$mode" in wallpaper) mode=dark ;; dark) mode=light ;; *) mode=wallpaper ;; esac; shift ;;
+    --random) random=1; shift ;;
+    wallpaper|dark|light) mode="$1"; shift ;;
+    gray) mode=dark; shift ;;
+    *) img="$(realpath "$1")"; shift ;;
+  esac
+done
+if [ "$random" = 1 ] || [ -z "$img" ]; then
+  [ "$random" = 0 ] && img=$(cat "$wallfile" 2>/dev/null)
+  if [ -z "$img" ] || [ ! -f "$img" ]; then
+    img=$(find ~/Pictures -maxdepth 2 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -not -path '*/Screenshots/*' | shuf -n 1)
+  fi
+fi
+[ -f "$img" ] || { echo "[setwall] no image found. Run: setwall /path/to/image.png"; exit 1; }
+echo "$mode" > "$modefile"; echo "$img" > "$wallfile"
+echo "[setwall] mode=$mode image=$img"
+
+appon() { [ "$(cat "$conf/apps/$1" 2>/dev/null)" != "off" ]; }
+
+ln -sfn "$state/Pal.qml" ~/.config/quickshell/Pal.qml
+ln -sfn "$state/colors-hypr.lua" ~/.config/hypr/colors.lua
+
+# 1) one palette for everything
+case "$mode" in light) kind=light ;; dark) kind=dark ;; *) kind=auto ;; esac
+python3 "$HOME/.config/wal/genpal.py" "$img" "$kind" "$mode" || { echo "[setwall] palette generator failed"; exit 1; }
+kind=$(cat "$state/kind" 2>/dev/null || echo dark)
+
+# 2) wal gets the SAME palette: kitty, btop, GTK css, lock screen
+tflag=""; appon terminals || tflag="-t"
+wal -f "$state/wal-theme.json" -n -q $tflag && echo "[setwall] wal: ok"
+
+# 3) GTK / libadwaita light or dark
+if appon gtk; then
+  if [ "$kind" = light ]; then
+    gsettings set org.gnome.desktop.interface color-scheme prefer-light 2>/dev/null
+    gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3 2>/dev/null
+  else
+    gsettings set org.gnome.desktop.interface color-scheme prefer-dark 2>/dev/null
+    gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark 2>/dev/null
+  fi
+fi
+
+# 4) Qt / KDE apps (alternating scheme names force KDE to re-apply)
+if appon qt && command -v plasma-apply-colorscheme >/dev/null && [ -f ~/.local/share/color-schemes/WallpaperA.colors ]; then
+  n=$(cat "$state/kde-toggle" 2>/dev/null); [ "$n" = A ] && n=B || n=A
+  echo "$n" > "$state/kde-toggle"
+  plasma-apply-colorscheme "Wallpaper$n" >/dev/null 2>&1 && echo "[setwall] kde: Wallpaper$n"
+fi
+
+# 5) Firefox
+if appon firefox && command -v pywalfox >/dev/null; then
+  pywalfox update >/dev/null 2>&1 && echo "[setwall] firefox: updated"
+fi
+
+# 6) wallpaper, lock screen, reloads
+cat > ~/.config/hypr/hyprpaper.conf <<CONF
+splash = false
+wallpaper {
+    monitor =
+    path = $img
+    fit_mode = cover
+}
+CONF
+pkill hyprpaper; sleep 0.3; hyprpaper >/dev/null 2>&1 & disown
+magick "$img" "$cache/lockwall.png" 2>/dev/null
+pkill -SIGUSR2 btop 2>/dev/null
+touch ~/.config/quickshell/shell.qml
+hyprctl reload >/dev/null 2>&1
+echo "[setwall] done"

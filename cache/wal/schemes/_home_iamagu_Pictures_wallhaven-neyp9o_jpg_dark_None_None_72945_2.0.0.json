@@ -1,0 +1,28 @@
+{
+    "checksum": "10356489243821895a9b7f09a7e7a2ef",
+    "wallpaper": "/home/iamagu/Pictures/wallhaven-neyp9o.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#20180e",
+        "foreground": "#c7c5c2",
+        "cursor": "#c7c5c2"
+    },
+    "colors": {
+        "color0": "#20180e",
+        "color1": "#4A4444",
+        "color2": "#645B56",
+        "color3": "#726860",
+        "color4": "#877A70",
+        "color5": "#92847B",
+        "color6": "#B0A097",
+        "color7": "#c7c5c2",
+        "color8": "#72675d",
+        "color9": "#4A4444",
+        "color10": "#645B56",
+        "color11": "#726860",
+        "color12": "#877A70",
+        "color13": "#92847B",
+        "color14": "#B0A097",
+        "color15": "#c7c5c2"
+    }
+}

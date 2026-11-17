@@ -1,0 +1,28 @@
+{
+    "checksum": "0d7d070ef8de692dc19661bc09371153",
+    "wallpaper": "/home/iamagu/Pictures/totoro-wallpaper-3928216915.png",
+    "alpha": "100",
+    "special": {
+        "background": "#111107",
+        "foreground": "#c3c3c1",
+        "cursor": "#c3c3c1"
+    },
+    "colors": {
+        "color0": "#111107",
+        "color1": "#BCAF4F",
+        "color2": "#3E71BE",
+        "color3": "#897890",
+        "color4": "#6CA0BB",
+        "color5": "#61A5E8",
+        "color6": "#C0C8AC",
+        "color7": "#c3c3c1",
+        "color8": "#6a6a56",
+        "color9": "#BCAF4F",
+        "color10": "#3E71BE",
+        "color11": "#897890",
+        "color12": "#6CA0BB",
+        "color13": "#61A5E8",
+        "color14": "#C0C8AC",
+        "color15": "#c3c3c1"
+    }
+}

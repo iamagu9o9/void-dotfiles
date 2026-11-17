@@ -1,0 +1,28 @@
+{
+    "checksum": "faa5de363d4d09f4e83b2cf5cf8252fc",
+    "wallpaper": "/home/iamagu/Pictures/newblackhole3purple.png",
+    "alpha": "100",
+    "special": {
+        "background": "#090404",
+        "foreground": "#c1c0c0",
+        "cursor": "#c1c0c0"
+    },
+    "colors": {
+        "color0": "#090404",
+        "color1": "#32168F",
+        "color2": "#3C1BA9",
+        "color3": "#4722B4",
+        "color4": "#602FE1",
+        "color5": "#7E40F2",
+        "color6": "#9A4FFB",
+        "color7": "#c1c0c0",
+        "color8": "#665353",
+        "color9": "#32168F",
+        "color10": "#3C1BA9",
+        "color11": "#4722B4",
+        "color12": "#602FE1",
+        "color13": "#7E40F2",
+        "color14": "#9A4FFB",
+        "color15": "#c1c0c0"
+    }
+}

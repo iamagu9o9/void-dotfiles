@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+case "$1" in clean|tonal|analogous|vivid|pastel) ;; *)
+  echo "usage: themestyle clean|tonal|analogous|vivid|pastel   (now: $(cat ~/.config/qstheme/style 2>/dev/null || echo analogous))"; exit 1 ;; esac
+mkdir -p ~/.config/qstheme; echo "$1" > ~/.config/qstheme/style
+setwall --mode wallpaper

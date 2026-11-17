@@ -1,0 +1,11 @@
+* {{
+    bg:         {background}f0;
+    bg-alt:     {color4}30;
+    fg:         {foreground};
+    dim:        {color8};
+    accent:     {color4};
+    accent-2:   {color6};
+    sel-bg:     {color4};
+    sel-fg:     {background};
+    border-col: {color4}99;
+}}

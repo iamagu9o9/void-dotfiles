@@ -1,0 +1,28 @@
+{
+    "checksum": "12838d7d698daa46b1c9740e2a5d9628",
+    "wallpaper": "/home/iamagu/Pictures/decay_6b97ff3b-9d69-4d80-ac1e-f2835.png",
+    "alpha": "100",
+    "special": {
+        "background": "#0c121c",
+        "foreground": "#c2c3c6",
+        "cursor": "#c2c3c6"
+    },
+    "colors": {
+        "color0": "#0c121c",
+        "color1": "#434C5B",
+        "color2": "#485263",
+        "color3": "#71696C",
+        "color4": "#A15054",
+        "color5": "#D36063",
+        "color6": "#BA9176",
+        "color7": "#c2c3c6",
+        "color8": "#5b6170",
+        "color9": "#434C5B",
+        "color10": "#485263",
+        "color11": "#71696C",
+        "color12": "#A15054",
+        "color13": "#D36063",
+        "color14": "#BA9176",
+        "color15": "#c2c3c6"
+    }
+}

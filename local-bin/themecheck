@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+import os, re, json
+h = os.path.expanduser("~")
+def rd(p):
+    try:
+        return open(os.path.join(h, p)).read()
+    except Exception:
+        return ""
+def first(pat, text, flags=0):
+    m = re.search(pat, text, flags)
+    return m.group(1).lower() if m else None
+
+res = {}
+res["Quickshell bar"] = first(r'color accent: "(#[0-9a-fA-F]{6})"', rd(".local/state/qstheme/Pal.qml"))
+try:
+    res["Terminals, btop, lock"] = json.loads(rd(".cache/wal/colors.json"))["colors"]["color4"].lower()
+except Exception:
+    res["Terminals, btop, lock"] = None
+res["GTK apps"] = first(r'accent_color\s+(#[0-9a-fA-F]{6})', rd(".config/gtk-3.0/gtk.css"))
+m = re.search(r'\[Colors:Selection\][^\[]*?BackgroundNormal=(\d+),(\d+),(\d+)',
+              rd(".local/share/color-schemes/WallpaperA.colors"), re.S)
+res["Qt / KDE apps"] = "#%02x%02x%02x" % tuple(int(x) for x in m.groups()) if m else None
+disc = None
+for d in (".config/vesktop/themes", ".var/app/dev.vencord.Vesktop/config/vesktop/themes",
+          ".var/app/com.discordapp.Discord/config/Vencord/themes"):
+    disc = first(r'--bg-brand:\s*(#[0-9a-fA-F]{6})', rd(d + "/wallpaper.theme.css"))
+    if disc:
+        break
+res["Discord theme file"] = disc
+m = re.search(r'active\s*=\s*"rgba\(([0-9a-fA-F]{6})', rd(".local/state/qstheme/colors-hypr.lua"))
+res["Window borders"] = "#" + m.group(1).lower() if m else None
+
+ref = res["Quickshell bar"]
+print("reference (bar accent): %s\n" % ref)
+for k, v in res.items():
+    mark = "ok      " if v and v == ref else ("MISSING " if v is None else "DIFFERENT")
+    print("  %-24s %-9s %s" % (k, v or "-", mark))

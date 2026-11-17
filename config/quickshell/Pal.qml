@@ -1,0 +1,1 @@
+/home/iamagu/.local/state/qstheme/Pal.qml

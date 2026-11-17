@@ -1,0 +1,28 @@
+{
+    "checksum": "ddc66d19de979fbaea42212141bd0a05",
+    "wallpaper": "/home/iamagu/Downloads/goku-perfected-3840x2160-25454.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#080c14",
+        "foreground": "#c1c2c4",
+        "cursor": "#c1c2c4"
+    },
+    "colors": {
+        "color0": "#080c14",
+        "color1": "#3E5261",
+        "color2": "#4C5761",
+        "color3": "#445868",
+        "color4": "#4F6677",
+        "color5": "#5A7286",
+        "color6": "#637B8F",
+        "color7": "#c1c2c4",
+        "color8": "#585f6b",
+        "color9": "#3E5261",
+        "color10": "#4C5761",
+        "color11": "#445868",
+        "color12": "#4F6677",
+        "color13": "#5A7286",
+        "color14": "#637B8F",
+        "color15": "#c1c2c4"
+    }
+}

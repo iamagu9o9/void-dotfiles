@@ -1,0 +1,6 @@
+#!/usr/bin/python3
+import sys
+from oslo_messaging.notify.notifier import _send_notification
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(_send_notification())

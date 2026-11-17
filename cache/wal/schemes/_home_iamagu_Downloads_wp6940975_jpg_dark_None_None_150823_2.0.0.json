@@ -1,0 +1,28 @@
+{
+    "checksum": "853c2c3d7591daa1c4787665b7663d6a",
+    "wallpaper": "/home/iamagu/Downloads/wp6940975.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#190a0a",
+        "foreground": "#c5c1c1",
+        "cursor": "#c5c1c1"
+    },
+    "colors": {
+        "color0": "#190a0a",
+        "color1": "#454545",
+        "color2": "#5E605F",
+        "color3": "#6F6F6F",
+        "color4": "#7E8180",
+        "color5": "#8D8E8E",
+        "color6": "#AEAEAE",
+        "color7": "#c5c1c1",
+        "color8": "#6e5959",
+        "color9": "#454545",
+        "color10": "#5E605F",
+        "color11": "#6F6F6F",
+        "color12": "#7E8180",
+        "color13": "#8D8E8E",
+        "color14": "#AEAEAE",
+        "color15": "#c5c1c1"
+    }
+}

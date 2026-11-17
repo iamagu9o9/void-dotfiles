@@ -1,0 +1,398 @@
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Hyprland
+import QtQuick
+import QtQuick.Layouts
+
+PanelWindow {
+    id: win
+    property bool isOpen: false
+    property bool busy: false
+    property bool adv: false
+    property string wall: ""
+    property var prefs: ({})
+    property var vals: ({})
+    property var pins: []
+    readonly property string prefsPath: Quickshell.env("HOME") + "/.local/state/qstheme/settings.json"
+    readonly property string bin: Quickshell.env("HOME") + "/.local/bin/dockpin"
+    readonly property var modeDef: ({ kind: "theme", key: "mode", def: "wallpaper" })
+
+    // kind: theme = file in ~/.config/qstheme then setwall | pref = live Config value | app = per-app switch | action
+    readonly property var schema: [
+        { sec: "Colors" },
+        { special: "mode" },
+        { title: "Accent color", desc: "Pick a fixed accent, or let the wallpaper choose it.", kind: "theme", key: "accent", def: "", opts: [["From wallpaper", ""], ["Red", "#e5484d"], ["Orange", "#f76b15"], ["Yellow", "#ffc53d"], ["Green", "#30a46c"], ["Teal", "#12a594"], ["Blue", "#3e63dd"], ["Purple", "#8e4ec6"], ["Pink", "#d6409f"]] },
+        { title: "How bold", desc: "Soft is calm and muted. Vivid is bright.", kind: "theme", key: "variant", def: "balanced", opts: [["Soft", "soft"], ["Balanced", "balanced"], ["Vivid", "vivid"]] },
+        { title: "Background tint", desc: "How much accent color leaks into backgrounds.", kind: "theme", key: "bgtint", def: "1.0", opts: [["None", "0"], ["Subtle", "0.6"], ["Normal", "1.0"], ["Strong", "1.6"]] },
+        { title: "Exact color", desc: "Click, then click any pixel on screen to use its color.", kind: "action", opts: [["Pick from screen", "pick"]] },
+
+        { sec: "Wallpaper" },
+        { title: "Change wallpaper", desc: "Every color on your desktop follows it. Shortcuts: Super+W to browse, Super+Shift+W for random.", kind: "action", opts: [["Choose wallpaper", "wallpaper"], ["Random", "random"]] },
+
+        { sec: "Apps that follow the wallpaper" },
+        { title: "Firefox and Zen Browser", desc: "Needs the Pywalfox extension.", kind: "app", key: "firefox", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "Discord", desc: "", kind: "app", key: "discord", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "GTK apps", desc: "", kind: "app", key: "gtk", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "Qt and KDE apps", desc: "", kind: "app", key: "qt", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "Terminals", desc: "", kind: "app", key: "terminals", opts: [["On", "on"], ["Off", "off"]] },
+
+        { sec: "Bar" },
+        { title: "Position", desc: "", kind: "pref", key: "barPosition", opts: [["Top", "top"], ["Bottom", "bottom"], ["Left", "left"], ["Right", "right"]] },
+        { title: "Look", desc: "Glass is see-through, Outline has only a border.", kind: "pref", key: "barStyle", opts: [["Tinted", "tinted"], ["Glass", "glass"], ["Neutral", "neutral"], ["Outline", "outline"], ["Gradient", "gradient"]] },
+        { title: "Workspaces", desc: "", kind: "pref", key: "workspaces", opts: [["5", 5], ["7", 7], ["10", 10]] },
+        { title: "Transparency", desc: "Lower shows more of what is behind panels.", kind: "pref", key: "islandOpacity", opts: [["60%", 0.6], ["80%", 0.8], ["94%", 0.94], ["100%", 1.0]] },
+        { title: "Clock format", desc: "", kind: "pref", key: "clock24", opts: [["12 hour", false], ["24 hour", true]] },
+
+        { sec: "Dock" },
+        { title: "Position", desc: "", kind: "pref", key: "dockPos", opts: [["Bottom", "bottom"], ["Top", "top"], ["Left", "left"], ["Right", "right"]] },
+        { title: "Hide when not in use", desc: "Slides away and returns when you touch the screen edge.", kind: "pref", key: "dockAutoHide", opts: [["On", true], ["Off", false]] },
+        { title: "Icon size", desc: "", kind: "pref", key: "dockSize", opts: [["Small", 36], ["Medium", 44], ["Large", 52], ["Huge", 62]] },
+        { title: "Gap from the screen edge", desc: "", kind: "pref", key: "dockMargin", opts: [["0", 0], ["6", 6], ["12", 12], ["20", 20]] },
+        { title: "Keep windows clear of it", desc: "Only works when hiding is off.", kind: "pref", key: "dockReserve", opts: [["On", true], ["Off", false]] },
+        { special: "dock" },
+
+        { sec: "Desktop clock" },
+        { title: "Style", desc: "", kind: "pref", key: "clockStyle", opts: [["Digital", "digital"], ["Analog", "analog"]] },
+        { title: "Position", desc: "", kind: "pref", key: "clockPos", opts: [["Top left", "topleft"], ["Top right", "topright"], ["Bottom left", "bottomleft"], ["Bottom right", "bottomright"], ["Center", "center"]] },
+        { title: "Seconds", desc: "", kind: "pref", key: "clockSeconds", opts: [["Show", true], ["Hide", false]] },
+        { title: "Date", desc: "", kind: "pref", key: "clockDate", opts: [["Show", true], ["Hide", false]] },
+        { title: "Card behind the clock", desc: "", kind: "pref", key: "clockCard", opts: [["On", true], ["Off", false]] },
+
+        { special: "adv" },
+        { adv: true, sec: "Advanced colors" },
+        { adv: true, title: "Color engine", desc: "OKLCH is more accurate. Material 3 is Google's algorithm.", kind: "theme", key: "engine", def: "oklch", opts: [["OKLCH", "oklch"], ["Material 3", "material"]] },
+        { adv: true, title: "Harmony", desc: "How the extra colors relate to the main one.", kind: "theme", key: "harmony", def: "analogous", opts: [["Analogous", "analogous"], ["One color", "mono"], ["Colorful", "colorful"]] },
+        { adv: true, title: "Color intensity", desc: "", kind: "theme", key: "chroma", def: "1.0", opts: [["70%", "0.7"], ["100%", "1.0"], ["130%", "1.3"]] },
+        { adv: true, title: "Hue shift", desc: "Rotates every color around the color wheel, in degrees.", kind: "theme", key: "hueshift", def: "0", opts: [["-30", "-30"], ["-15", "-15"], ["0", "0"], ["+15", "15"], ["+30", "30"]] },
+        { adv: true, title: "Text contrast", desc: "", kind: "theme", key: "contrast", def: "4.5", opts: [["Normal", "4.5"], ["High", "7"]] },
+        { adv: true, title: "Material 3 scheme", desc: "Only used when the engine is Material 3.", kind: "theme", key: "scheme", def: "scheme-tonal-spot", opts: [["Tonal spot", "scheme-tonal-spot"], ["Vibrant", "scheme-vibrant"], ["Expressive", "scheme-expressive"], ["Neutral", "scheme-neutral"], ["Fidelity", "scheme-fidelity"], ["Content", "scheme-content"], ["Monochrome", "scheme-monochrome"], ["Rainbow", "scheme-rainbow"], ["Fruit salad", "scheme-fruit-salad"]] }
+    ]
+
+    function appName(id) {
+        const e = DesktopEntries.heuristicLookup(id)
+        return e ? e.name : id
+    }
+    readonly property var runningIds: {
+        const out = []
+        const tl = ToplevelManager.toplevels.values
+        for (let i = 0; i < tl.length; i++) {
+            const id = tl[i].appId || ""
+            if (id !== "" && out.indexOf(id) < 0 && win.pins.indexOf(id) < 0) out.push(id)
+        }
+        return out
+    }
+
+    visible: isOpen || card.opacity > 0.01
+    color: "transparent"
+    implicitWidth: 780
+    implicitHeight: 680
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.namespace: "qs-menu"
+
+    IpcHandler {
+        target: "settings"
+        function toggle(): void { win.isOpen = !win.isOpen }
+        function open(): void { win.isOpen = true }
+        function close(): void { win.isOpen = false }
+    }
+    HyprlandFocusGrab { windows: [win]; active: win.isOpen; onCleared: win.isOpen = false }
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/qstheme/dock.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: { try { win.pins = JSON.parse(text()) } catch (e) {} }
+    }
+
+    Process {
+        id: loadPrefs
+        command: ["bash", "-c", "cat \"$1\" 2>/dev/null || echo '{}'", "_", win.prefsPath]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let o = {}
+                try { o = JSON.parse(text) } catch (e) { o = {} }
+                win.prefs = o
+                for (const k in o) { if (k !== "dockApps") { try { Config[k] = o[k] } catch (e2) {} } }
+            }
+        }
+    }
+    Component.onCompleted: loadPrefs.running = true
+
+    Process {
+        id: loadWall
+        command: ["bash", "-c", "cat \"$HOME/.cache/wal/wal\" 2>/dev/null"]
+        stdout: StdioCollector { onStreamFinished: win.wall = text.trim() }
+    }
+    Process {
+        id: loadVals
+        command: ["bash", "-c", "for k in engine variant harmony chroma bgtint hueshift contrast accent scheme; do printf '%s=%s\\n' $k \"$(cat ~/.config/qstheme/$k 2>/dev/null)\"; done; printf 'mode=%s\\n' \"$(cat ~/.cache/theme-mode 2>/dev/null)\"; for f in ~/.config/qstheme/apps/*; do [ -e \"$f\" ] && printf 'app_%s=%s\\n' \"$(basename $f)\" \"$(cat $f)\"; done"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const o = {}
+                for (const line of text.split("\n")) {
+                    const i = line.indexOf("=")
+                    if (i > 0) o[line.slice(0, i)] = line.slice(i + 1)
+                }
+                win.vals = o
+            }
+        }
+    }
+    onIsOpenChanged: { if (isOpen) { busy = false; loadVals.running = true; loadWall.running = true; keys.forceActiveFocus() } }
+
+    function isActive(def, v) {
+        if (def.kind === "pref") {
+            const cur = Config[def.key]
+            return typeof v === "number" ? Math.abs(cur - v) < 0.011 : cur === v
+        }
+        if (def.kind === "app") return (vals["app_" + def.key] || "on") === v
+        if (def.kind === "theme") return (vals[def.key] || def.def || "") === String(v)
+        return false
+    }
+
+    function setPref(key, value) {
+        Config[key] = value
+        const o = Object.assign({}, prefs)
+        o[key] = value
+        prefs = o
+        Quickshell.execDetached(["bash", "-c",
+            "mkdir -p \"$(dirname \"$2\")\"; printf %s \"$1\" > \"$2\"", "_", JSON.stringify(o), prefsPath])
+    }
+
+    function runTheme(script, k, v) {
+        busy = true
+        Quickshell.execDetached(["bash", "-c",
+            "export PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; " + script + "; sleep 2; qs ipc call settings open",
+            "_", k || "", v || ""])
+    }
+
+    function choose(def, v) {
+        if (def.kind === "pref") { setPref(def.key, v); return }
+        if (def.kind === "app") {
+            runTheme("mkdir -p ~/.config/qstheme/apps; printf %s \"$2\" > ~/.config/qstheme/apps/$1; setwall", def.key, v)
+            return
+        }
+        if (def.kind === "theme") {
+            if (def.key === "mode") runTheme("setwall --mode \"$2\"", def.key, v)
+            else runTheme("mkdir -p ~/.config/qstheme; if [ -z \"$2\" ]; then rm -f ~/.config/qstheme/$1; else printf %s \"$2\" > ~/.config/qstheme/$1; fi; setwall", def.key, String(v))
+            return
+        }
+        if (def.kind === "action") {
+            if (v === "wallpaper") {
+                isOpen = false
+                Quickshell.execDetached(["qs", "ipc", "call", "wallpapers", "toggle"])
+            } else if (v === "random") {
+                runTheme("setwall --random")
+            } else if (v === "pick") {
+                isOpen = false
+                Quickshell.execDetached(["bash", "-c",
+                    "export PATH=\"$HOME/.local/bin:$PATH\"; c=$(hyprpicker -a) && [ -n \"$c\" ] && mkdir -p ~/.config/qstheme && printf %s \"$c\" > ~/.config/qstheme/accent && setwall; sleep 2; qs ipc call settings open"])
+            }
+        }
+    }
+
+    Rectangle {
+        id: card
+        anchors.fill: parent
+        radius: 28
+        color: Pal.a(Pal.bg, 0.95)
+        border.width: 2
+        border.color: Pal.a(Pal.accent, 0.6)
+        opacity: win.isOpen ? 1 : 0
+        scale: win.isOpen ? 1 : 0.96
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutBack; easing.overshoot: 1.05 } }
+
+        Item { id: keys; anchors.fill: parent; Keys.onEscapePressed: win.isOpen = false }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 22
+            spacing: 10
+
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: 30
+                Text {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: win.busy
+                    text: "Applying colors…"
+                    color: Pal.accent; font.family: Config.font; font.pixelSize: 11
+                }
+                Text {
+                    anchors.centerIn: parent
+                    text: "Settings"
+                    color: Pal.fg; font.family: Config.font; font.bold: true; font.pixelSize: 20
+                }
+                Text {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "\uf00d"
+                    color: Pal.dim; font.family: Config.font; font.pixelSize: 16
+                    MouseArea { anchors.fill: parent; anchors.margins: -8; onClicked: win.isOpen = false }
+                }
+            }
+
+            Flickable {
+                id: fl
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentWidth: width
+                contentHeight: content.implicitHeight + 20
+                boundsBehavior: Flickable.StopAtBounds
+
+                ColumnLayout {
+                    id: content
+                    width: fl.width - 12
+                    spacing: 14
+
+                    Repeater {
+                        model: win.schema
+
+                        ColumnLayout {
+                            id: item
+                            required property var modelData
+                            readonly property var d: modelData
+                            visible: !d.adv || win.adv
+                            Layout.fillWidth: true
+                            spacing: 4
+
+                            Text {
+                                visible: !!item.d.sec
+                                text: item.d.sec || ""
+                                color: Pal.fg; font.family: Config.font; font.bold: true; font.pixelSize: 17
+                                Layout.topMargin: 12
+                            }
+
+                            // Light / Dark / Wallpaper cards
+                            RowLayout {
+                                visible: item.d.special === "mode"
+                                Layout.fillWidth: true
+                                spacing: 14
+                                ModeCard {
+                                    label: "Wallpaper"
+                                    bg: Pal.bg; fg: Pal.fg; ac: Pal.accent
+                                    wall: win.wall
+                                    active: win.isActive(win.modeDef, "wallpaper")
+                                    onClicked: win.choose(win.modeDef, "wallpaper")
+                                }
+                                ModeCard {
+                                    label: "Light"
+                                    bg: "#f1ecf3"; fg: "#2b2630"; ac: "#8b6c9e"
+                                    active: win.isActive(win.modeDef, "light")
+                                    onClicked: win.choose(win.modeDef, "light")
+                                }
+                                ModeCard {
+                                    label: "Dark"
+                                    bg: "#1f1b24"; fg: "#e9e3ee"; ac: "#b79ccb"
+                                    active: win.isActive(win.modeDef, "dark")
+                                    onClicked: win.choose(win.modeDef, "dark")
+                                }
+                            }
+
+                            // advanced toggle
+                            Chip {
+                                visible: item.d.special === "adv"
+                                label: win.adv ? "Hide advanced options" : "Show advanced options"
+                                onClicked: win.adv = !win.adv
+                                Layout.topMargin: 12
+                            }
+
+                            // normal option
+                            Text {
+                                visible: !!item.d.title
+                                text: item.d.title || ""
+                                color: Pal.fg; font.family: Config.font; font.bold: true; font.pixelSize: 13
+                            }
+                            Text {
+                                visible: !!item.d.desc
+                                text: item.d.desc || ""
+                                color: Pal.dim; font.family: Config.font; font.pixelSize: 11
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+                            Item {
+                                visible: !!item.d.opts
+                                Layout.fillWidth: true
+                                Layout.topMargin: 4
+                                implicitHeight: seg.visible ? seg.implicitHeight : optFlow.implicitHeight
+
+                                Seg {
+                                    id: seg
+                                    visible: !!item.d.opts && item.d.opts.length <= 5 && item.d.kind !== "action"
+                                    opts: item.d.opts || []
+                                    isActive: function(v) { return win.isActive(item.d, v) }
+                                    onPicked: (v) => win.choose(item.d, v)
+                                }
+                                Flow {
+                                    id: optFlow
+                                    visible: !seg.visible
+                                    width: parent.width
+                                    spacing: 8
+                                    Repeater {
+                                        model: seg.visible ? [] : (item.d.opts || [])
+                                        Chip {
+                                            required property var modelData
+                                            label: modelData[0]
+                                            active: item.d.kind !== "action" && win.isActive(item.d, modelData[1])
+                                            onClicked: win.choose(item.d, modelData[1])
+                                        }
+                                    }
+                                }
+                            }
+
+                            // dock apps
+                            ColumnLayout {
+                                visible: item.d.special === "dock"
+                                Layout.fillWidth: true
+                                spacing: 4
+                                Text { text: "Apps on the dock"; color: Pal.fg; font.family: Config.font; font.bold: true; font.pixelSize: 13 }
+                                Text {
+                                    text: "Click one to remove it. You can also right-click any dock icon, or click + on the dock."
+                                    color: Pal.dim; font.family: Config.font; font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                }
+                                Flow {
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: 4
+                                    spacing: 8
+                                    Repeater {
+                                        model: win.pins
+                                        Chip {
+                                            required property string modelData
+                                            label: win.appName(modelData) + "  \uf00d"
+                                            onClicked: Quickshell.execDetached([win.bin, "remove", modelData])
+                                        }
+                                    }
+                                }
+                                Text {
+                                    text: "Open right now (click to add)"
+                                    color: Pal.fg; font.family: Config.font; font.bold: true; font.pixelSize: 13
+                                    Layout.topMargin: 8
+                                }
+                                Flow {
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: 4
+                                    spacing: 8
+                                    Repeater {
+                                        model: win.runningIds
+                                        Chip {
+                                            required property string modelData
+                                            label: "\uf067  " + win.appName(modelData)
+                                            onClicked: Quickshell.execDetached([win.bin, "add", modelData])
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

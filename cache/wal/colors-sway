@@ -1,0 +1,21 @@
+set $wallpaper /home/iamagu/Pictures/0258.jpg
+
+set $background #0a0f1c
+set $foreground #e2e8f6
+
+set $color0 #0a0f1c
+set $color1 #00bee3
+set $color2 #4bb3ff
+set $color3 #90a8eb
+set $color4 #88a6ff
+set $color5 #d08de3
+set $color6 #b097ff
+set $color7 #e2e8f6
+set $color8 #9098ab
+set $color9 #3ad5fb
+set $color10 #84c8ff
+set $color11 #a7bfff
+set $color12 #a7bfff
+set $color13 #e7a3fb
+set $color14 #c4b4ff
+set $color15 #e2e8f6

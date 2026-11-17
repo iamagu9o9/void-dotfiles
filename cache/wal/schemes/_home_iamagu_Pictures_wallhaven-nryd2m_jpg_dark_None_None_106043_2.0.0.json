@@ -1,0 +1,28 @@
+{
+    "checksum": "5d4b86f428bd4bb24f01f8b41cb9a5d0",
+    "wallpaper": "/home/iamagu/Pictures/wallhaven-nryd2m.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#090404",
+        "foreground": "#c1c0c0",
+        "cursor": "#c1c0c0"
+    },
+    "colors": {
+        "color0": "#090404",
+        "color1": "#7F7F80",
+        "color2": "#909090",
+        "color3": "#A1A09E",
+        "color4": "#B0B0B0",
+        "color5": "#C0C0BF",
+        "color6": "#CFCFCF",
+        "color7": "#c1c0c0",
+        "color8": "#665353",
+        "color9": "#7F7F80",
+        "color10": "#909090",
+        "color11": "#A1A09E",
+        "color12": "#B0B0B0",
+        "color13": "#C0C0BF",
+        "color14": "#CFCFCF",
+        "color15": "#c1c0c0"
+    }
+}

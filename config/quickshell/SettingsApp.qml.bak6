@@ -1,0 +1,328 @@
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Hyprland
+import QtQuick
+import QtQuick.Layouts
+
+PanelWindow {
+    id: win
+    property bool isOpen: false
+    property var prefs: ({})
+    property var vals: ({})
+    readonly property string prefsPath: Quickshell.env("HOME") + "/.local/state/qstheme/settings.json"
+
+    // kind: theme = a file in ~/.config/qstheme then setwall | pref = live Config value | app = per-app switch
+    readonly property var schema: [
+        { sec: "Colors" },
+        { title: "MODE", kind: "theme", key: "mode", def: "wallpaper", opts: [["Wallpaper colors", "wallpaper"], ["Dark", "dark"], ["Light", "light"]] },
+        { title: "ENGINE", kind: "theme", key: "engine", def: "oklch", opts: [["OKLCH (accurate)", "oklch"], ["Material 3", "material"]] },
+        { title: "STRENGTH", kind: "theme", key: "variant", def: "balanced", opts: [["Soft", "soft"], ["Balanced", "balanced"], ["Vivid", "vivid"]] },
+        { title: "HARMONY", kind: "theme", key: "harmony", def: "analogous", opts: [["Analogous", "analogous"], ["One color", "mono"], ["Colorful", "colorful"]] },
+        { title: "COLOR INTENSITY", kind: "theme", key: "chroma", def: "1.0", opts: [["70%", "0.7"], ["100%", "1.0"], ["130%", "1.3"]] },
+        { title: "BACKGROUND TINT", kind: "theme", key: "bgtint", def: "1.0", opts: [["None", "0"], ["Subtle", "0.6"], ["Normal", "1.0"], ["Strong", "1.6"]] },
+        { title: "HUE SHIFT", kind: "theme", key: "hueshift", def: "0", opts: [["-30", "-30"], ["-15", "-15"], ["0", "0"], ["+15", "15"], ["+30", "30"]] },
+        { title: "CONTRAST", kind: "theme", key: "contrast", def: "4.5", opts: [["Normal", "4.5"], ["High", "7"]] },
+        { title: "ACCENT COLOR", kind: "theme", key: "accent", def: "", opts: [["From wallpaper", ""], ["Red", "#e5484d"], ["Orange", "#f76b15"], ["Yellow", "#ffc53d"], ["Green", "#30a46c"], ["Teal", "#12a594"], ["Blue", "#3e63dd"], ["Purple", "#8e4ec6"], ["Pink", "#d6409f"]] },
+        { title: "EXACT COLOR", kind: "action", opts: [["Pick from the screen (eyedropper)", "pick"]] },
+        { title: "MATERIAL 3 SCHEME (when the engine is Material 3)", kind: "theme", key: "scheme", def: "scheme-tonal-spot", opts: [["Tonal spot", "scheme-tonal-spot"], ["Vibrant", "scheme-vibrant"], ["Expressive", "scheme-expressive"], ["Neutral", "scheme-neutral"], ["Fidelity", "scheme-fidelity"], ["Content", "scheme-content"], ["Monochrome", "scheme-monochrome"], ["Rainbow", "scheme-rainbow"], ["Fruit salad", "scheme-fruit-salad"]] },
+
+        { sec: "Apps that follow the wallpaper" },
+        { title: "FIREFOX AND ZEN (PYWALFOX)", kind: "app", key: "firefox", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "DISCORD", kind: "app", key: "discord", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "GTK APPS", kind: "app", key: "gtk", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "QT / KDE APPS", kind: "app", key: "qt", opts: [["On", "on"], ["Off", "off"]] },
+        { title: "TERMINALS", kind: "app", key: "terminals", opts: [["On", "on"], ["Off", "off"]] },
+
+        { sec: "Bar" },
+        { title: "POSITION", kind: "pref", key: "barPosition", opts: [["Top", "top"], ["Bottom", "bottom"], ["Left", "left"], ["Right", "right"]] },
+        { title: "STYLE", kind: "pref", key: "barStyle", opts: [["Tinted", "tinted"], ["Glass", "glass"], ["Neutral", "neutral"], ["Outline", "outline"], ["Gradient", "gradient"]] },
+        { title: "WORKSPACES", kind: "pref", key: "workspaces", opts: [["5", 5], ["7", 7], ["10", 10]] },
+        { title: "TRANSPARENCY", kind: "pref", key: "islandOpacity", opts: [["60%", 0.6], ["80%", 0.8], ["94%", 0.94], ["100%", 1.0]] },
+        { title: "CLOCK FORMAT", kind: "pref", key: "clock24", opts: [["12 hour", false], ["24 hour", true]] },
+
+        { sec: "Dock" },
+        { title: "POSITION", kind: "pref", key: "dockPos", opts: [["Bottom", "bottom"], ["Top", "top"], ["Left", "left"], ["Right", "right"]] },
+        { title: "AUTO-HIDE", kind: "pref", key: "dockAutoHide", opts: [["On", true], ["Off", false]] },
+        { title: "ICON SIZE", kind: "pref", key: "dockSize", opts: [["Small", 36], ["Medium", 44], ["Large", 52], ["Huge", 62]] },
+        { title: "DISTANCE FROM THE EDGE", kind: "pref", key: "dockMargin", opts: [["0", 0], ["6", 6], ["12", 12], ["20", 20]] },
+        { title: "KEEP WINDOWS CLEAR OF IT (needs auto-hide off)", kind: "pref", key: "dockReserve", opts: [["On", true], ["Off", false]] },
+
+        { sec: "Desktop clock" },
+        { title: "STYLE", kind: "pref", key: "clockStyle", opts: [["Digital", "digital"], ["Analog", "analog"]] },
+        { title: "POSITION", kind: "pref", key: "clockPos", opts: [["Top left", "topleft"], ["Top right", "topright"], ["Bottom left", "bottomleft"], ["Bottom right", "bottomright"], ["Center", "center"]] },
+        { title: "SECONDS", kind: "pref", key: "clockSeconds", opts: [["Show", true], ["Hide", false]] },
+        { title: "DATE", kind: "pref", key: "clockDate", opts: [["Show", true], ["Hide", false]] },
+        { title: "CARD BEHIND IT", kind: "pref", key: "clockCard", opts: [["On", true], ["Off", false]] },
+
+        { sec: "Wallpaper" },
+        { title: "CHANGE", kind: "action", opts: [["Choose wallpaper", "wallpaper"], ["Random", "random"]] }
+    ]
+
+    function appName(id) {
+        const e = DesktopEntries.heuristicLookup(id)
+        return e ? e.name : id
+    }
+    readonly property var runningIds: {
+        const out = []
+        const tl = ToplevelManager.toplevels.values
+        for (let i = 0; i < tl.length; i++) {
+            const id = tl[i].appId || ""
+            if (id !== "" && out.indexOf(id) < 0 && Config.dockApps.indexOf(id) < 0) out.push(id)
+        }
+        return out
+    }
+    function pin(id) {
+        const a = Config.dockApps.slice()
+        if (a.indexOf(id) < 0) a.push(id)
+        setPref("dockApps", a)
+    }
+    function unpin(id) {
+        setPref("dockApps", Config.dockApps.filter(x => x !== id))
+    }
+
+    visible: isOpen || card.opacity > 0.01
+    color: "transparent"
+    implicitWidth: 720
+    implicitHeight: 700
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.namespace: "qs-menu"
+
+    IpcHandler {
+        target: "settings"
+        function toggle(): void { win.isOpen = !win.isOpen }
+        function open(): void { win.isOpen = true }
+        function close(): void { win.isOpen = false }
+    }
+    HyprlandFocusGrab { windows: [win]; active: win.isOpen; onCleared: win.isOpen = false }
+
+    // ---- saved live settings (bar, dock, clock): loaded at startup, applied to Config ----
+    Process {
+        id: loadPrefs
+        command: ["bash", "-c", "cat \"$1\" 2>/dev/null || echo '{}'", "_", win.prefsPath]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let o = {}
+                try { o = JSON.parse(text) } catch (e) { o = {} }
+                win.prefs = o
+                for (const k in o) { try { Config[k] = o[k] } catch (e2) {} }
+            }
+        }
+    }
+    Component.onCompleted: loadPrefs.running = true
+
+    // ---- current theme settings, read each time the window opens ----
+    Process {
+        id: loadVals
+        command: ["bash", "-c", "for k in engine variant harmony chroma bgtint hueshift contrast accent scheme; do printf '%s=%s\\n' $k \"$(cat ~/.config/qstheme/$k 2>/dev/null)\"; done; printf 'mode=%s\\n' \"$(cat ~/.cache/theme-mode 2>/dev/null)\"; for f in ~/.config/qstheme/apps/*; do [ -e \"$f\" ] && printf 'app_%s=%s\\n' \"$(basename $f)\" \"$(cat $f)\"; done"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const o = {}
+                for (const line of text.split("\n")) {
+                    const i = line.indexOf("=")
+                    if (i > 0) o[line.slice(0, i)] = line.slice(i + 1)
+                }
+                win.vals = o
+            }
+        }
+    }
+    onIsOpenChanged: { if (isOpen) { loadVals.running = true; keys.forceActiveFocus() } }
+
+    function isActive(def, v) {
+        if (def.kind === "pref") {
+            const cur = Config[def.key]
+            return typeof v === "number" ? Math.abs(cur - v) < 0.011 : cur === v
+        }
+        if (def.kind === "app") return (vals["app_" + def.key] || "on") === v
+        if (def.kind === "theme") return (vals[def.key] || def.def || "") === String(v)
+        return false
+    }
+
+    function setPref(key, value) {
+        Config[key] = value
+        const o = Object.assign({}, prefs)
+        o[key] = value
+        prefs = o
+        Quickshell.execDetached(["bash", "-c",
+            "mkdir -p \"$(dirname \"$2\")\"; printf %s \"$1\" > \"$2\"", "_", JSON.stringify(o), prefsPath])
+    }
+
+    function runTheme(script, k, v) {
+        Quickshell.execDetached(["bash", "-c",
+            "export PATH=\"$HOME/.local/bin:$HOME/.cargo/bin:$PATH\"; " + script + "; sleep 2; qs ipc call settings open",
+            "_", k || "", v || ""])
+    }
+
+    function choose(def, v) {
+        if (def.kind === "pref") { setPref(def.key, v); return }
+        if (def.kind === "app") {
+            runTheme("mkdir -p ~/.config/qstheme/apps; printf %s \"$2\" > ~/.config/qstheme/apps/$1; setwall", def.key, v)
+            return
+        }
+        if (def.kind === "theme") {
+            if (def.key === "mode") runTheme("setwall --mode \"$2\"", def.key, v)
+            else runTheme("mkdir -p ~/.config/qstheme; if [ -z \"$2\" ]; then rm -f ~/.config/qstheme/$1; else printf %s \"$2\" > ~/.config/qstheme/$1; fi; setwall", def.key, String(v))
+            return
+        }
+        if (def.kind === "action") {
+            if (v === "wallpaper") {
+                isOpen = false
+                Quickshell.execDetached(["qs", "ipc", "call", "wallpapers", "toggle"])
+            } else if (v === "random") {
+                runTheme("setwall --random")
+            } else if (v === "pick") {
+                isOpen = false
+                Quickshell.execDetached(["bash", "-c",
+                    "export PATH=\"$HOME/.local/bin:$PATH\"; c=$(hyprpicker -a) && [ -n \"$c\" ] && mkdir -p ~/.config/qstheme && printf %s \"$c\" > ~/.config/qstheme/accent && setwall; sleep 2; qs ipc call settings open"])
+            }
+        }
+    }
+
+    Rectangle {
+        id: card
+        anchors.fill: parent
+        radius: 28
+        color: Pal.a(Pal.bg, 0.95)
+        border.width: 2
+        border.color: Pal.a(Pal.accent, 0.6)
+        opacity: win.isOpen ? 1 : 0
+        scale: win.isOpen ? 1 : 0.96
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutBack; easing.overshoot: 1.05 } }
+
+        Item { id: keys; anchors.fill: parent; Keys.onEscapePressed: win.isOpen = false }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 20
+            spacing: 12
+
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "\uf013  Settings"
+                    color: Pal.fg; font.family: Config.font; font.bold: true; font.pixelSize: 18
+                    Layout.fillWidth: true
+                }
+                Text {
+                    text: "\uf00d"
+                    color: Pal.dim; font.family: Config.font; font.pixelSize: 16
+                    MouseArea { anchors.fill: parent; anchors.margins: -8; onClicked: win.isOpen = false }
+                }
+            }
+
+            Flickable {
+                id: fl
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentWidth: width
+                contentHeight: sections.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+
+                ColumnLayout {
+                    id: sections
+                    width: fl.width
+                    spacing: 10
+
+                    Repeater {
+                        model: win.schema
+
+                        ColumnLayout {
+                            id: item
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 6
+
+                            Text {
+                                visible: !!item.modelData.sec
+                                text: item.modelData.sec || ""
+                                color: Pal.accent
+                                font.family: Config.font; font.bold: true; font.pixelSize: 15
+                                Layout.topMargin: 10
+                            }
+                            Text {
+                                visible: !!item.modelData.title
+                                text: item.modelData.title || ""
+                                color: Pal.dim
+                                font.family: Config.font; font.bold: true; font.pixelSize: 11
+                            }
+                            Item {
+                                visible: !!item.modelData.opts
+                                Layout.fillWidth: true
+                                implicitHeight: flow.implicitHeight
+                                Flow {
+                                    id: flow
+                                    width: parent.width
+                                    spacing: 8
+                                    Repeater {
+                                        model: item.modelData.opts || []
+                                        Chip {
+                                            required property var modelData
+                                            label: modelData[0]
+                                            active: win.isActive(item.modelData, modelData[1])
+                                            onClicked: win.choose(item.modelData, modelData[1])
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // DOCK APPS BLOCK
+                    Text {
+                        text: "Dock apps"
+                        color: Pal.accent
+                        font.family: Config.font; font.bold: true; font.pixelSize: 15
+                        Layout.topMargin: 10
+                    }
+                    Text {
+                        text: "PINNED (TAP TO REMOVE)"
+                        color: Pal.dim
+                        font.family: Config.font; font.bold: true; font.pixelSize: 11
+                    }
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: pinFlow.implicitHeight
+                        Flow {
+                            id: pinFlow
+                            width: parent.width
+                            spacing: 8
+                            Repeater {
+                                model: Config.dockApps
+                                Chip {
+                                    required property string modelData
+                                    label: win.appName(modelData) + "  \uf00d"
+                                    onClicked: win.unpin(modelData)
+                                }
+                            }
+                        }
+                    }
+                    Text {
+                        text: "RUNNING NOW (TAP TO PIN)"
+                        color: Pal.dim
+                        font.family: Config.font; font.bold: true; font.pixelSize: 11
+                    }
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: runFlow.implicitHeight
+                        Flow {
+                            id: runFlow
+                            width: parent.width
+                            spacing: 8
+                            Repeater {
+                                model: win.runningIds
+                                Chip {
+                                    required property string modelData
+                                    label: "\uf067  " + win.appName(modelData)
+                                    onClicked: win.pin(modelData)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

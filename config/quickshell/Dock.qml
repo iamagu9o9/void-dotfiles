@@ -1,0 +1,482 @@
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Quickshell.Hyprland
+import QtQuick
+import QtQuick.Layouts
+
+PanelWindow {
+    id: win
+    readonly property string dp: Config.dockPos
+    readonly property bool vertical: dp === "left" || dp === "right"
+    readonly property int isz: Config.dockSize
+    readonly property int strip: 6
+    readonly property real fw: vertical ? isz + 22 : grid.implicitWidth + 28
+    readonly property real fh: vertical ? grid.implicitHeight + 28 : isz + 22
+    readonly property bool shown: !Config.dockAutoHide || hv.hovered || hold.running || menu.visible || picker.isOpen
+    readonly property string bin: Quickshell.env("HOME") + "/.local/bin/dockpin"
+
+    property var pins: Config.dockApps
+    property var menuItems: []
+    property var menuData: null
+    property real mx: 0
+    property real my: 0
+    property real mw: 1
+    property real mh: 1
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/qstheme/dock.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try { win.pins = JSON.parse(text()) } catch (e) {}
+        }
+    }
+
+    readonly property var entries: {
+        const out = []
+        const tl = ToplevelManager.toplevels.values
+        const used = {}
+        const p = win.pins
+        for (let i = 0; i < p.length; i++) {
+            const e = DesktopEntries.heuristicLookup(p[i])
+            if (!e) continue
+            const key = (e.id || "").toLowerCase()
+            const cls = (e.startupClass || "").toLowerCase()
+            const wins = []
+            for (let j = 0; j < tl.length; j++) {
+                const id = (tl[j].appId || "").toLowerCase()
+                if (id === key || (cls !== "" && id === cls)) { wins.push(tl[j]); used[j] = true }
+            }
+            out.push({ entry: e, wins: wins, name: e.name, pinned: true, pin: p[i] })
+        }
+        const groups = {}
+        for (let j = 0; j < tl.length; j++) {
+            if (used[j]) continue
+            const id = tl[j].appId || ""
+            if (!groups[id]) {
+                groups[id] = { entry: DesktopEntries.heuristicLookup(id), wins: [], name: id, pinned: false, pin: id }
+                out.push(groups[id])
+            }
+            groups[id].wins.push(tl[j])
+        }
+        return out
+    }
+
+    function openMenu(item, d) {
+        const pt = item.mapToItem(null, 0, 0)
+        mx = pt.x; my = pt.y; mw = item.width; mh = item.height
+        const items = []
+        if (d.entry) items.push({ label: "New window", act: "new" })
+        if (d.wins.length > 0) items.push({ label: d.wins.length > 1 ? "Close all windows" : "Close window", act: "close" })
+        if (d.pinned) items.push({ label: "Unpin from dock", act: "unpin" })
+        else if (d.entry) items.push({ label: "Pin to dock", act: "pin" })
+        items.push({ label: "Add app…", act: "add" })
+        menuData = d
+        menuItems = items
+        menu.visible = true
+    }
+
+    function openMenuAt(px, py) {
+        mx = px; my = py; mw = 1; mh = 1
+        menuData = null
+        menuItems = [{ label: "Add app…", act: "add" }]
+        menu.visible = true
+    }
+
+    function runAct(a) {
+        menu.visible = false
+        const d = menuData
+        if (a === "add") { picker.open(); return }
+        if (!d) return
+        if (a === "new" && d.entry) d.entry.execute()
+        else if (a === "close") { for (let i = 0; i < d.wins.length; i++) d.wins[i].close() }
+        else if (a === "unpin") Quickshell.execDetached([bin, "remove", d.pin])
+        else if (a === "pin" && d.entry) Quickshell.execDetached([bin, "add", d.entry.id])
+    }
+
+    visible: true
+    anchors { top: dp === "top"; bottom: dp === "bottom"; left: dp === "left"; right: dp === "right" }
+    margins {
+        top: Config.dockMargin + (Config.barPosition === "top" && dp === "top" ? Config.sideWidth + Config.sideMargin : 0)
+        bottom: Config.dockMargin + (Config.barPosition === "bottom" && dp === "bottom" ? Config.sideWidth + Config.sideMargin : 0)
+        left: Config.dockMargin + (Config.barPosition === "left" && dp === "left" ? Config.sideWidth + Config.sideMargin : 0)
+        right: Config.dockMargin + (Config.barPosition === "right" && dp === "right" ? Config.sideWidth + Config.sideMargin : 0)
+    }
+    implicitWidth: vertical ? (shown ? fw : strip) : fw
+    implicitHeight: vertical ? fh : (shown ? fh : strip)
+    color: "transparent"
+    exclusionMode: (Config.dockReserve && !Config.dockAutoHide) ? ExclusionMode.Auto : ExclusionMode.Ignore
+    WlrLayershell.namespace: "qs-dock"
+
+    Timer { id: hold; interval: 600 }
+
+    // ---------------- right-click menu ----------------
+    PopupWindow {
+        id: menu
+        anchor.window: win
+        anchor.rect.x: win.mx
+        anchor.rect.y: win.my
+        anchor.rect.width: win.mw
+        anchor.rect.height: win.mh
+        anchor.edges: win.dp === "bottom" ? Edges.Top : (win.dp === "top" ? Edges.Bottom : (win.dp === "left" ? Edges.Right : Edges.Left))
+        anchor.gravity: anchor.edges
+        implicitWidth: 200
+        implicitHeight: mcol.implicitHeight + 12
+        color: "transparent"
+        visible: false
+
+        HyprlandFocusGrab { windows: [menu]; active: menu.visible; onCleared: menu.visible = false }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 14
+            color: Pal.a(Pal.bg, 0.97)
+            border.width: 1
+            border.color: Pal.a(Pal.accent, 0.5)
+
+            ColumnLayout {
+                id: mcol
+                anchors.fill: parent
+                anchors.margins: 6
+                spacing: 2
+                Repeater {
+                    model: win.menuItems
+                    Rectangle {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        implicitHeight: 32
+                        radius: 9
+                        color: mma.containsMouse ? Pal.a(Pal.accent, 0.25) : "transparent"
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 12
+                            text: modelData.label
+                            color: Pal.fg
+                            font.family: Config.font
+                            font.pixelSize: 12
+                        }
+                        MouseArea {
+                            id: mma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: win.runAct(modelData.act)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ---------------- add-app picker ----------------
+    PanelWindow {
+        id: picker
+        property bool isOpen: false
+        property string q: ""
+        function open() { q = ""; search.text = ""; isOpen = true; search.forceActiveFocus() }
+        function add(e) {
+            Quickshell.execDetached([win.bin, "add", e.id])
+            isOpen = false
+        }
+
+        readonly property var results: {
+            const all = DesktopEntries.applications.values
+            const s = q.toLowerCase()
+            const out = []
+            for (let i = 0; i < all.length; i++) {
+                const e = all[i]
+                if (e.noDisplay) continue
+                if (s === "" || e.name.toLowerCase().indexOf(s) >= 0) out.push(e)
+            }
+            out.sort((a, b) => a.name.localeCompare(b.name))
+            return out
+        }
+
+        visible: isOpen
+        color: "transparent"
+        anchors { top: true; bottom: true; left: true; right: true }
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.keyboardFocus: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        WlrLayershell.namespace: "qs-menu"
+
+        MouseArea { anchors.fill: parent; onClicked: picker.isOpen = false }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: 420
+            height: 480
+            radius: 26
+            color: Pal.a(Pal.bg, 0.97)
+            border.width: 2
+            border.color: Pal.a(Pal.accent, 0.6)
+
+            MouseArea { anchors.fill: parent }
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 18
+                spacing: 10
+
+                Text {
+                    text: "Add app to dock"
+                    color: Pal.fg
+                    font.family: Config.font
+                    font.pixelSize: 15
+                    font.bold: true
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 38
+                    radius: 19
+                    color: Pal.a(Pal.fg, 0.08)
+                    border.width: 1
+                    border.color: Pal.a(Pal.accent, 0.4)
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: 16
+                        visible: search.text === ""
+                        text: "Search apps…"
+                        color: Pal.dim
+                        font.family: Config.font
+                        font.pixelSize: 13
+                    }
+                    TextInput {
+                        id: search
+                        anchors.fill: parent
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 16
+                        verticalAlignment: TextInput.AlignVCenter
+                        color: Pal.fg
+                        font.family: Config.font
+                        font.pixelSize: 13
+                        clip: true
+                        onTextChanged: picker.q = text
+                        Keys.onEscapePressed: picker.isOpen = false
+                        Keys.onReturnPressed: if (picker.results.length > 0) picker.add(picker.results[0])
+                    }
+                }
+
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    spacing: 2
+                    model: picker.results
+                    delegate: Rectangle {
+                        id: row
+                        required property var modelData
+                        readonly property bool isPinned: win.pins.indexOf(modelData.id) >= 0
+                        width: ListView.view.width
+                        height: 42
+                        radius: 12
+                        color: rma.containsMouse ? Pal.a(Pal.accent, 0.22) : "transparent"
+
+                        Image {
+                            id: rIc
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 26
+                            height: 26
+                            source: Quickshell.iconPath(row.modelData.icon, true)
+                            sourceSize.width: 64
+                            sourceSize.height: 64
+                            fillMode: Image.PreserveAspectFit
+                        }
+                        Text {
+                            anchors.left: rIc.right
+                            anchors.leftMargin: 12
+                            anchors.right: parent.right
+                            anchors.rightMargin: 40
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: row.modelData.name
+                            elide: Text.ElideRight
+                            color: Pal.fg
+                            font.family: Config.font
+                            font.pixelSize: 13
+                        }
+                        Text {
+                            anchors.right: parent.right
+                            anchors.rightMargin: 14
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: row.isPinned
+                            text: "✓"
+                            color: Pal.accent
+                            font.pixelSize: 15
+                            font.bold: true
+                        }
+                        MouseArea {
+                            id: rma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: picker.add(row.modelData)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ---------------- the dock itself ----------------
+    Item {
+        id: stage
+        anchors.fill: parent
+
+        HoverHandler {
+            id: hv
+            onHoveredChanged: if (!hovered) hold.restart()
+        }
+
+        Rectangle {
+            id: pill
+            width: win.fw
+            height: win.fh
+            anchors.bottom: win.dp === "bottom" ? parent.bottom : undefined
+            anchors.top: win.dp === "top" ? parent.top : undefined
+            anchors.left: win.dp === "left" ? parent.left : undefined
+            anchors.right: win.dp === "right" ? parent.right : undefined
+            anchors.horizontalCenter: win.vertical ? undefined : parent.horizontalCenter
+            anchors.verticalCenter: win.vertical ? parent.verticalCenter : undefined
+            radius: Math.min(width, height) / 2.4
+            color: Pal.a(Pal.bg, Config.islandOpacity)
+            border.width: Config.border
+            border.color: Pal.a(Pal.accent, 0.5)
+
+            property real off: win.shown ? 0 : (win.vertical ? win.fw : win.fh) + 14
+            Behavior on off { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            transform: Translate {
+                x: win.dp === "left" ? -pill.off : (win.dp === "right" ? pill.off : 0)
+                y: win.dp === "top" ? -pill.off : (win.dp === "bottom" ? pill.off : 0)
+            }
+            opacity: 0
+            NumberAnimation on opacity { to: 1; duration: 500; easing.type: Easing.OutCubic }
+
+            // right-click on empty dock space
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.RightButton
+                onClicked: (m) => {
+                    const pt = mapToItem(null, m.x, m.y)
+                    win.openMenuAt(pt.x, pt.y)
+                }
+            }
+
+            GridLayout {
+                id: grid
+                anchors.centerIn: parent
+                flow: win.vertical ? GridLayout.LeftToRight : GridLayout.TopToBottom
+                columns: win.vertical ? 1 : -1
+                rows: win.vertical ? -1 : 1
+                rowSpacing: 6
+                columnSpacing: 6
+
+                Repeater {
+                    model: win.entries
+                    Item {
+                        id: di
+                        required property var modelData
+                        readonly property var wins: modelData.wins
+                        readonly property var entry: modelData.entry
+                        readonly property string iconPath: entry ? Quickshell.iconPath(entry.icon, true) : ""
+                        Layout.alignment: Qt.AlignCenter
+                        Layout.preferredWidth: win.isz
+                        Layout.preferredHeight: win.isz
+                        scale: dma.pressed ? 0.88 : (dma.containsMouse ? 1.2 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
+
+                        Rectangle {
+                            id: hoverGlow
+                            anchors.centerIn: parent
+                            width: win.isz * 0.98
+                            height: width
+                            radius: width * 0.28
+                            color: Pal.a(Pal.fg, dma.containsMouse ? 0.18 : 0)
+                            Behavior on color { ColorAnimation { duration: 140 } }
+                        }
+                        Image {
+                            id: ic
+                            anchors.centerIn: parent
+                            width: win.isz * 0.7
+                            height: win.isz * 0.7
+                            source: di.iconPath
+                            sourceSize.width: 96
+                            sourceSize.height: 96
+                            fillMode: Image.PreserveAspectFit
+                            visible: status === Image.Ready
+                        }
+                        Text {
+                            anchors.centerIn: parent
+                            visible: ic.status !== Image.Ready
+                            text: (di.modelData.name || "?").charAt(0).toUpperCase()
+                            color: Pal.accent
+                            font.family: Config.font
+                            font.bold: true
+                            font.pixelSize: win.isz * 0.45
+                        }
+                        Rectangle {
+                            visible: di.wins.length > 0
+                            width: win.vertical ? 3 : (di.wins.length > 1 ? 14 : 8)
+                            height: win.vertical ? (di.wins.length > 1 ? 14 : 8) : 3
+                            radius: 2
+                            color: Pal.accent
+                            anchors.horizontalCenter: win.vertical ? undefined : parent.horizontalCenter
+                            anchors.verticalCenter: win.vertical ? parent.verticalCenter : undefined
+                            anchors.bottom: (!win.vertical && win.dp !== "top") ? parent.bottom : undefined
+                            anchors.top: (!win.vertical && win.dp === "top") ? parent.top : undefined
+                            anchors.left: (win.vertical && win.dp === "left") ? parent.left : undefined
+                            anchors.right: (win.vertical && win.dp === "right") ? parent.right : undefined
+                            anchors.bottomMargin: -5
+                            anchors.topMargin: -5
+                            anchors.leftMargin: -5
+                            anchors.rightMargin: -5
+                        }
+                        MouseArea {
+                            id: dma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                            onClicked: (m) => {
+                                if (m.button === Qt.RightButton) {
+                                    win.openMenu(di, di.modelData)
+                                } else if (m.button === Qt.MiddleButton || di.wins.length === 0) {
+                                    if (di.entry) di.entry.execute()
+                                } else {
+                                    di.wins[0].activate()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // the + button
+                Rectangle {
+                    Layout.alignment: Qt.AlignCenter
+                    Layout.preferredWidth: win.isz * 0.7
+                    Layout.preferredHeight: win.isz * 0.7
+                    radius: width / 2
+                    color: pma.containsMouse ? Pal.a(Pal.accent, 0.35) : Pal.a(Pal.fg, 0.08)
+                    border.width: 1
+                    border.color: Pal.a(Pal.fg, 0.18)
+                    Text {
+                        anchors.centerIn: parent
+                        text: "+"
+                        color: Pal.fg
+                        font.family: Config.font
+                        font.pixelSize: win.isz * 0.5
+                    }
+                    MouseArea {
+                        id: pma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: picker.open()
+                    }
+                }
+            }
+        }
+    }
+}

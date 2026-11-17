@@ -1,0 +1,28 @@
+{
+    "checksum": "4073a5af8aea82c3b46dc06630f0d532",
+    "wallpaper": "/home/iamagu/Pictures/mono_road1.png",
+    "alpha": "100",
+    "special": {
+        "background": "#1d0c0c",
+        "foreground": "#c6c2c2",
+        "cursor": "#c6c2c2"
+    },
+    "colors": {
+        "color0": "#1d0c0c",
+        "color1": "#3D4142",
+        "color2": "#505050",
+        "color3": "#60605F",
+        "color4": "#6B6B6B",
+        "color5": "#777777",
+        "color6": "#828282",
+        "color7": "#c6c2c2",
+        "color8": "#705c5c",
+        "color9": "#3D4142",
+        "color10": "#505050",
+        "color11": "#60605F",
+        "color12": "#6B6B6B",
+        "color13": "#777777",
+        "color14": "#828282",
+        "color15": "#c6c2c2"
+    }
+}

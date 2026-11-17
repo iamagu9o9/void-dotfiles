@@ -1,0 +1,56 @@
+
+import os, sys
+
+mode = sys.argv[1]
+home = os.path.expanduser("~")
+
+if mode == "light":
+    light = True
+    bg, fg, dim = "#ffffff", "#000000", "#333333"
+    accent = accent2 = c1 = c2 = c3 = c5 = "#000000"
+elif mode == "dark":
+    light = False
+    bg, fg, dim = "#000000", "#ffffff", "#cccccc"
+    accent = accent2 = c1 = c2 = c3 = c5 = "#ffffff"
+else:
+    # Wallpaper mode may use generated colors.
+    import json
+    with open(os.path.join(home, ".cache", "wal", "colors.json")) as f:
+        colors = json.load(f).get("colors", {})
+    light = False
+    bg, fg, dim = "#000000", "#ffffff", "#cccccc"
+    accent = colors.get("color4", "#ffffff")
+    accent2 = colors.get("color5", "#ffffff")
+    c1 = colors.get("color1", accent)
+    c2 = colors.get("color2", accent2)
+    c3 = colors.get("color3", accent)
+    c5 = colors.get("color5", accent2)
+
+qml = f'''pragma Singleton
+import Quickshell
+import QtQuick
+
+Singleton {{
+    readonly property bool light: {str(light).lower()}
+    readonly property color bg: "{bg}"
+    readonly property color fg: "{fg}"
+    readonly property color dim: "{dim}"
+    readonly property color accent: "{accent}"
+    readonly property color accent2: "{accent2}"
+    readonly property color c1: "{c1}"
+    readonly property color c2: "{c2}"
+    readonly property color c3: "{c3}"
+    readonly property color c5: "{c5}"
+    function a(c, o) {{ return Qt.rgba(c.r, c.g, c.b, o) }}
+}}
+'''
+
+for target in (
+    os.path.join(home, ".config", "quickshell", "Pal.qml"),
+    os.path.join(home, ".cache", "wal", "Pal.qml"),
+):
+    with open(target, "w") as f:
+        f.write(qml)
+
+print(f"[setwall] {mode}: bg={bg}, fg={fg}, accent={accent}")
+
